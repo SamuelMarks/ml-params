@@ -1,20 +1,23 @@
 from abc import ABC, abstractmethod
+from typing import Tuple
 
+import numpy as np
+import tensorflow as tf
 import tensorflow_datasets as tfds
-
 from ml_prepare.datasets import datasets2classes
 from ml_prepare.exectors import build_tfds_dataset
 
 
 class BaseTrainer(ABC):
     """
-    Trainer must be implemented for each ML framework
+    Trainer that is be implemented for each ML framework
     """
-    data = None
+    data = None  # type: (None or Tuple[tf.data.Dataset, tf.data.Dataset] or Tuple[np.ndarray, np.ndarray])
 
     @staticmethod
     def load_data_from_tfds_or_ml_prepare(dataset_name, tensorflow_datasets_dir=None, data_loader_kwargs=None):
         """
+        Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library
 
         :param dataset_name: name of dataset
         :type dataset_name: ```str```
@@ -34,10 +37,10 @@ class BaseTrainer(ABC):
             'dataset_name': dataset_name,
             'tfds_dir': tensorflow_datasets_dir
         })
-        if dataset_name in datasets2classes:
-            ds_builder = build_tfds_dataset(**data_loader_kwargs)
-        else:
-            ds_builder = BaseTrainer.get_from_tensorflow_datasets(dataset_name)
+        ds_builder = build_tfds_dataset(**data_loader_kwargs) if dataset_name in datasets2classes \
+            else BaseTrainer.get_from_tensorflow_datasets(dataset_name, data_dir=tensorflow_datasets_dir,
+                                                          **{k: v for k, v in data_loader_kwargs.items()
+                                                             if v is not None and k in ('K', 'as_numpy', 'scale')})
 
         if hasattr(ds_builder, 'download_and_prepare_kwargs'):
             download_and_prepare_kwargs = getattr(ds_builder, 'download_and_prepare_kwargs')
@@ -55,6 +58,7 @@ class BaseTrainer(ABC):
     def get_from_tensorflow_datasets(dataset_name, data_dir=None, K=None,
                                      as_numpy=False, scale=255., download_and_prepare_kwargs=None):
         """
+        Acquire from the official tensorflow_datasets model zoo
 
         :param dataset_name: name of dataset
         :type dataset_name: ```str```
@@ -77,7 +81,6 @@ class BaseTrainer(ABC):
         :return: Train and tests dataset splits
         :rtype: ```Tuple[tf.data.Dataset, tf.data.Dataset] or Tuple[np.ndarray, np.ndarray]```
         """
-
         return BaseTrainer.common_dataset_handler(
             ds_builder=tfds.builder(dataset_name, data_dir=data_dir),
             download_and_prepare_kwargs=download_and_prepare_kwargs,
@@ -87,6 +90,7 @@ class BaseTrainer(ABC):
     @staticmethod
     def common_dataset_handler(ds_builder, download_and_prepare_kwargs, scale, K, as_numpy):
         """
+        Helper function that is to be used by the different dataset builders
 
         :param ds_builder:
         :type ds_builder: ```tfds.core.DatasetBuilder or Tuple[tf.data.Dataset, tf.data.Dataset]
@@ -160,6 +164,11 @@ class BaseTrainer(ABC):
         if data_loader_kwargs is None:
             data_loader_kwargs = {}
         data_loader_kwargs['dataset_name'] = dataset_name
+        if 'data_loader_kwargs' not in data_loader_kwargs:
+            data_loader_kwargs['data_loader_kwargs'] = {}
+        data_loader_kwargs['data_loader_kwargs']['K'] = K
+        if 'as_numpy' in data_loader_kwargs:
+            data_loader_kwargs['data_loader_kwargs']['as_numpy'] = data_loader_kwargs.pop('as_numpy')
 
         loaded_data = data_loader(**data_loader_kwargs)
         assert loaded_data is not None
@@ -177,6 +186,7 @@ class BaseTrainer(ABC):
     @abstractmethod
     def train(self, epochs, *args, **kwargs):
         """
+        Run the training loop for your ML pipeline.
 
         :param epochs: number of epochs (must be greater than 0)
         :type epochs: int
@@ -185,7 +195,9 @@ class BaseTrainer(ABC):
         :param kwargs:
         :return:
         """
-        """
-        Run the training loop for your ML pipeline.
-        """
         assert epochs is not None and epochs > 0
+
+
+del ABC, abstractmethod, np, tf, build_tfds_dataset
+
+__all__ = ['BaseTrainer']
