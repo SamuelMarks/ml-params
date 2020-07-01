@@ -89,7 +89,8 @@ class BaseTrainer(ABC):
         """
 
         :param ds_builder:
-        :type ds_builder: ```tfds.core.DatasetBuilder```
+        :type ds_builder: ```tfds.core.DatasetBuilder or Tuple[tf.data.Dataset, tf.data.Dataset]
+                             or Tuple[np.ndarray, np.ndarray]```
 
         :param download_and_prepare_kwargs:
         :type download_and_prepare_kwargs: ```None or dict```
@@ -106,10 +107,13 @@ class BaseTrainer(ABC):
         :return: Train and tests dataset splits
         :rtype: ```Tuple[tf.data.Dataset, tf.data.Dataset] or Tuple[np.ndarray, np.ndarray]```
         """
-        ds_builder.download_and_prepare(**(download_and_prepare_kwargs or {}))
+        if isinstance(ds_builder, tfds.core.DatasetBuilder):
+            ds_builder.download_and_prepare(**(download_and_prepare_kwargs or {}))
 
-        train_ds = ds_builder.as_dataset(split='train', batch_size=-1)
-        test_ds = ds_builder.as_dataset(split='test', batch_size=-1)
+            train_ds = ds_builder.as_dataset(split='train', batch_size=-1)
+            test_ds = ds_builder.as_dataset(split='test', batch_size=-1)
+        else:
+            train_ds, test_ds = ds_builder
 
         if as_numpy:
             train_ds, test_ds = map(tfds.as_numpy, (train_ds, test_ds))
@@ -158,12 +162,13 @@ class BaseTrainer(ABC):
         data_loader_kwargs['dataset_name'] = dataset_name
 
         loaded_data = data_loader(**data_loader_kwargs)
-        assert loaded_data is not None and hasattr(loaded_data, 'as_numpy')
+        assert loaded_data is not None
 
         if output_type is None:
             self.data = loaded_data
-        elif output_type == 'numpy' and hasattr(loaded_data, 'as_numpy'):
-            self.data = loaded_data.as_numpy()
+        elif output_type == 'numpy':
+            if hasattr(loaded_data, 'as_numpy'):
+                self.data = loaded_data.as_numpy()
         else:
             raise NotImplementedError(output_type)
 
