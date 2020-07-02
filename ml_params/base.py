@@ -116,6 +116,8 @@ class BaseTrainer(ABC):
 
             train_ds = ds_builder.as_dataset(split='train', batch_size=-1)
             test_ds = ds_builder.as_dataset(split='test', batch_size=-1)
+        elif hasattr(ds_builder, 'train_stream') and hasattr(ds_builder, 'eval_stream'):
+            return ds_builder  # Handled elsewhere, this is from trax
         else:
             train_ds, test_ds = ds_builder
 
