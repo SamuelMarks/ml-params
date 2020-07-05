@@ -80,7 +80,7 @@ class BaseTrainer(ABC):
 
         :param model: model object, e.g., a tf.keras.Sequential, tl.Serial,  nn.Module instance
 
-        :param call: call `model()` even if `model_kwargs is None`
+        :param call: call `model()` even if `len(model_kwargs) == 0`
         :type call: ```bool```
 
         :param \**model_kwargs: to be passed into the model. If empty, doesn't call, unless call=True.
@@ -93,7 +93,7 @@ class BaseTrainer(ABC):
               Number of classes
         """
 
-        self.model = model if model_kwargs is None and not call else model(**(model_kwargs or {}))
+        self.model = model if len(model_kwargs) == 0 and not call else model(**(model_kwargs or {}))
         return self.model
 
     @abstractmethod
