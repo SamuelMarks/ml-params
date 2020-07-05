@@ -19,9 +19,9 @@ class BaseTrainer(ABC):
     data = None  # type: (None or Tuple[tf.data.Dataset, tf.data.Dataset] or Tuple[np.ndarray, np.ndarray])
     model = None  # type: (None or Any or tf.keras.models.Sequential or tf.keras.models.Model)
 
-    def load_data(self, dataset_name, data_loader=None,
-                  data_loader_kwargs=None, data_type='infer',
-                  output_type=None, K=None):
+    def load_data(self, dataset_name, data_loader=load_data_from_tfds_or_ml_prepare,
+                  data_type='infer', output_type=None, K=None,
+                  **data_loader_kwargs):
         """
         Load the data for your ML pipeline. Will be fed into `train`.
 
@@ -30,10 +30,7 @@ class BaseTrainer(ABC):
 
         :param data_loader: function that returns the expected data type.
          Defaults to TensorFlow Datasets and ml_prepare combined one.
-        :type data_loader: ```None or (*args, **kwargs) -> tf.data.Datasets or Any```
-
-        :param data_loader_kwargs: pass this as arguments to data_loader function
-        :type data_loader_kwargs: ```None or dict```
+        :type data_loader: ```(*args, **kwargs) -> tf.data.Datasets or Any```
 
         :param data_type: incoming data type, defaults to 'infer'
         :type data_type: ```str```
@@ -44,19 +41,21 @@ class BaseTrainer(ABC):
         :param K: backend engine, e.g., `np` or `tf`
         :type K: ```None or np or tf or Any```
 
+        :param data_loader_kwargs: pass this as arguments to data_loader function
+        :type data_loader_kwargs: ```None or dict```
+
         :return: Dataset splits (by default, your train and test)
         :rtype: ```Tuple[tf.data.Dataset, tf.data.Dataset] or Tuple[np.ndarray, np.ndarray]```
         """
         assert dataset_name is not None
-        if data_loader is None:
-            data_loader = load_data_from_tfds_or_ml_prepare
         if data_type != 'infer':
             raise NotImplementedError(data_type)
-        if data_loader_kwargs is None:
-            data_loader_kwargs = {}
-        data_loader_kwargs['dataset_name'] = dataset_name
-        data_loader_kwargs['K'] = K
-        data_loader_kwargs['as_numpy'] = data_loader_kwargs.get('as_numpy', True)
+
+        data_loader_kwargs.update({
+            'dataset_name': dataset_name,
+            'K': K,
+            'as_numpy': data_loader_kwargs.get('as_numpy', True)
+        })
 
         loaded_data = data_loader(**data_loader_kwargs)
         assert loaded_data is not None
@@ -75,19 +74,23 @@ class BaseTrainer(ABC):
 
         return self.data
 
-    @abstractmethod
-    def load_model(self, model, model_kwargs=None, call=False):
+    def load_model(self, model, call=False, **model_kwargs):
         """
+        Load the model. Takes a model object, or a pipeline that downloads & configures before returning a model object.
 
         :param model: model object, e.g., a tf.keras.Sequential, tl.Serial,  nn.Module instance
-
-        :param model_kwargs: to be passed into the model. If empty, doesn't call, unless call=True.
-        :type model_kwargs: ```None or dict```
 
         :param call: call `model()` even if `model_kwargs is None`
         :type call: ```bool```
 
+        :param \**model_kwargs: to be passed into the model. If empty, doesn't call, unless call=True.
+           to be passed into the model. If empty, doesn't call, unless call=True.
+
         :return self.model, e.g., the result of applying `model_kwargs` on model
+
+        :Keyword Arguments:
+            * *num_classes* (``int``) --
+              Number of classes
         """
 
         self.model = model if model_kwargs is None and not call else model(**(model_kwargs or {}))
@@ -126,13 +129,13 @@ class BaseTrainer(ABC):
         :param writer: Writer for all output, could be a TensorBoard instance, a file handler like stdout or stderr
         :type writer: ```stdout or Any```
 
-        :param args:
-        :param kwargs:
+        :param \*args:
+        :param \**kwargs:
         :return:
         """
         assert epochs is not None and epochs > 0
 
 
-del ABC, abstractmethod, stdout, Tuple, Any, List, load_data_from_tfds_or_ml_prepare, tf, np
+del ABC, abstractmethod, stdout, Tuple, Any, List, tf, np
 
 __all__ = ['BaseTrainer']

@@ -40,6 +40,9 @@ def common_dataset_handler(ds_builder, download_and_prepare_kwargs, scale, K, as
         train_ds, test_ds = train_ds.numpy(), test_ds.numpy()
 
     if K is not None and scale is not None:
+        if isinstance(scale, tuple):
+            assert scale[0] == scale[1]
+            scale = scale[0]
         train_ds['image'] = K.float32(train_ds['image']) / scale
         test_ds['image'] = K.float32(test_ds['image']) / scale
 

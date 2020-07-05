@@ -5,7 +5,7 @@ from ml_params.utils import common_dataset_handler
 
 
 def get_from_tensorflow_datasets(dataset_name, data_dir=None, K=None,
-                                 as_numpy=False, scale=255., download_and_prepare_kwargs=None):
+                                 as_numpy=False, scale=255., **download_and_prepare_kwargs):
     """
     Acquire from the official tensorflow_datasets model zoo
 
