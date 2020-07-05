@@ -1,21 +1,20 @@
 from abc import ABC, abstractmethod
-from typing import Tuple, Any
-
-import numpy as np
+from sys import stdout
+from typing import Tuple, Any, List
 
 from ml_params.datasets import load_data_from_tfds_or_ml_prepare
 
 try:
     import tensorflow as tf
+    import numpy as np
 except ImportError:
     tf = None  # `tf` is only used for typings in this file
-
-from ml_prepare.exectors import build_tfds_dataset
+    np = None  # `np` is only used for typings in this file
 
 
 class BaseTrainer(ABC):
     """
-    Trainer that is be implemented for each ML framework
+    Trainer that is to be implemented for each ML framework
     """
     data = None  # type: (None or Tuple[tf.data.Dataset, tf.data.Dataset] or Tuple[np.ndarray, np.ndarray])
     model = None  # type: (None or Any or tf.keras.models.Sequential or tf.keras.models.Model)
@@ -56,11 +55,8 @@ class BaseTrainer(ABC):
         if data_loader_kwargs is None:
             data_loader_kwargs = {}
         data_loader_kwargs['dataset_name'] = dataset_name
-        if 'data_loader_kwargs' not in data_loader_kwargs:
-            data_loader_kwargs['data_loader_kwargs'] = {}
-        data_loader_kwargs['data_loader_kwargs']['K'] = K
-        if 'as_numpy' in data_loader_kwargs:
-            data_loader_kwargs['data_loader_kwargs']['as_numpy'] = data_loader_kwargs.pop('as_numpy')
+        data_loader_kwargs['K'] = K
+        data_loader_kwargs['as_numpy'] = data_loader_kwargs.get('as_numpy', True)
 
         loaded_data = data_loader(**data_loader_kwargs)
         assert loaded_data is not None
@@ -70,6 +66,10 @@ class BaseTrainer(ABC):
         elif output_type == 'numpy':
             if hasattr(loaded_data, 'as_numpy'):
                 self.data = loaded_data.as_numpy()
+            elif hasattr(loaded_data, 'numpy'):
+                self.data = loaded_data.numpy()
+            elif type(loaded_data).__module__ != 'numpy':
+                raise TypeError('Unable to convert data to numpy')
         else:
             raise NotImplementedError(output_type)
 
@@ -94,15 +94,37 @@ class BaseTrainer(ABC):
         return self.model
 
     @abstractmethod
-    def train(self, epochs, save_directory, *args, **kwargs):
+    def train(self, callbacks, epochs, loss, metrics, metric_emit_freq, optimizer,
+              save_directory, output_type='infer', writer=stdout, *args, **kwargs):
         """
         Run the training loop for your ML pipeline.
+
+        :param callbacks: Collection of callables that are run inside the training loop
+        :type callbacks: ```None or List[Callable] or Tuple[Callable]```
 
         :param epochs: number of epochs (must be greater than 0)
         :type epochs: ```int```
 
-        :param save_directory: directory to save output to, e.g., weights
-        :type save_directory: ```bool```
+        :param loss: Loss function, can be a string (depending on the framework) or an instance of a class
+        :type loss: ```str or Callable or Any```
+
+        :param metrics: Collection of metrics to monitor, e.g., accuracy, f1
+        :type metrics: ```None or List[Callable or str] or Tuple[Callable or str]```
+
+        :param metric_emit_freq: Frequency of metric emission, e.g., `lambda: epochs % 10 == 0`, defaults to every epoch
+        :type metric_emit_freq: ```None or (*args, **kwargs) -> bool```
+
+        :param optimizer: Optimizer, can be a string (depending on the framework) or an instance of a class
+        :type callbacks: ```str or Callable or Any```
+
+        :param save_directory: Directory to save output in, e.g., weights in h5 files. If None, don't save.
+        :type save_directory: ```None or str```
+
+        :param output_type: `if save_directory is not None` then save in this format, e.g., 'h5'.
+        :type output_type: ```str```
+
+        :param writer: Writer for all output, could be a TensorBoard instance, a file handler like stdout or stderr
+        :type writer: ```stdout or Any```
 
         :param args:
         :param kwargs:
@@ -111,6 +133,6 @@ class BaseTrainer(ABC):
         assert epochs is not None and epochs > 0
 
 
-del ABC, abstractmethod, np, tf, build_tfds_dataset
+del ABC, abstractmethod, stdout, Tuple, Any, List, load_data_from_tfds_or_ml_prepare, tf, np
 
 __all__ = ['BaseTrainer']

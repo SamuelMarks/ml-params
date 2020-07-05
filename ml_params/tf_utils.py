@@ -1,7 +1,7 @@
 """ In its own module to simplify usage,
     e.g., in environment where tensorflow and/or tensorflow_datasets aren't installed """
 
-import tensorflow_datasets as tfds
+from ml_params.utils import common_dataset_handler
 
 
 def get_from_tensorflow_datasets(dataset_name, data_dir=None, K=None,
@@ -30,6 +30,8 @@ def get_from_tensorflow_datasets(dataset_name, data_dir=None, K=None,
     :return: Train and tests dataset splits
     :rtype: ```Tuple[tf.data.Dataset, tf.data.Dataset] or Tuple[np.ndarray, np.ndarray]```
     """
+    import tensorflow_datasets as tfds
+
     return common_dataset_handler(
         ds_builder=tfds.builder(dataset_name, data_dir=data_dir),
         download_and_prepare_kwargs=download_and_prepare_kwargs,
