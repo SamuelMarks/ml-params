@@ -1,4 +1,16 @@
 def camel_case(st, upper=False):
+    """
+    Convert string to camel-case (upper or lower)
+
+    :param st: input string
+    :type st: ```str```
+
+    :param upper: upper camelcase if True, else lower camelcase
+    :type upper: ```bool```
+
+    :return: st
+    :rtype: ```str```
+    """
     output = ''.join(x for x in st.title() if x.isalnum())
     return getattr(output[0], 'upper' if upper else 'lower')() + output[1:]
 
@@ -37,7 +49,7 @@ def common_dataset_handler(ds_builder, download_and_prepare_kwargs, scale, K, as
         train_ds, test_ds = ds_builder
 
     if as_numpy:
-        train_ds, test_ds = train_ds.numpy(), test_ds.numpy()
+        train_ds, test_ds = to_numpy(train_ds), to_numpy(test_ds)
 
     if K is not None and scale is not None:
         if isinstance(scale, tuple):
@@ -47,3 +59,30 @@ def common_dataset_handler(ds_builder, download_and_prepare_kwargs, scale, K, as
         test_ds['image'] = K.float32(test_ds['image']) / scale
 
     return train_ds, test_ds
+
+
+def to_numpy(obj, K=None):
+    """
+    Convert input to numpy
+
+    :param obj: Any input that can be converted to numpy (raises error otherwise)
+    :type obj: ```Any```
+
+    :param K: backend engine, e.g., `np` or `tf`; defaults to `np`
+    :type K: ```None or np or tf or Any```
+
+    :return: numpy type, probably np.ndarray
+    :rtype: ```np.ndarray```
+    """
+    module_name = 'numpy' if K is None else K.__name__
+
+    if obj is None:
+        return K.nan
+    elif type(obj).__module__ == module_name:
+        return obj
+    elif hasattr(obj, 'as_numpy'):
+        return obj.as_numpy()
+    elif hasattr(obj, 'numpy'):
+        return obj.numpy()
+
+    raise TypeError('Unable to convert {!r} to numpy'.format(type(obj)))

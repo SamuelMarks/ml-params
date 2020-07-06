@@ -3,6 +3,7 @@ from sys import stdout
 from typing import Tuple, Any, List
 
 from ml_params.datasets import load_data_from_tfds_or_ml_prepare
+from ml_params.utils import to_numpy
 
 try:
     import tensorflow as tf
@@ -50,6 +51,8 @@ class BaseTrainer(ABC):
         assert dataset_name is not None
         if data_type != 'infer':
             raise NotImplementedError(data_type)
+        elif data_loader is None:
+            data_loader = load_data_from_tfds_or_ml_prepare
 
         data_loader_kwargs.update({
             'dataset_name': dataset_name,
@@ -63,12 +66,7 @@ class BaseTrainer(ABC):
         if output_type is None:
             self.data = loaded_data
         elif output_type == 'numpy':
-            if hasattr(loaded_data, 'as_numpy'):
-                self.data = loaded_data.as_numpy()
-            elif hasattr(loaded_data, 'numpy'):
-                self.data = loaded_data.numpy()
-            elif type(loaded_data).__module__ != 'numpy':
-                raise TypeError('Unable to convert data to numpy')
+            self.data = to_numpy(loaded_data)
         else:
             raise NotImplementedError(output_type)
 
