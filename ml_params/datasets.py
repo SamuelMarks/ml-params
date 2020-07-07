@@ -54,13 +54,13 @@ def load_data_from_ml_prepare(dataset_name, tfds_dir=None, generate_dir=None,
         download_and_prepare_kwargs = getattr(ds_builder, 'download_and_prepare_kwargs')
         delattr(ds_builder, 'download_and_prepare_kwargs')
     else:
-        download_and_prepare_kwargs = None
+        download_and_prepare_kwargs = {}
 
     return common_dataset_handler(
         ds_builder=ds_builder,
-        download_and_prepare_kwargs=download_and_prepare_kwargs,
         scale=None,  # Keep this as None, the processing is done above
-        K=K, as_numpy=as_numpy
+        K=K, as_numpy=as_numpy,
+        **download_and_prepare_kwargs
     )
 
 
@@ -100,10 +100,10 @@ def load_data_from_tfds_or_ml_prepare(dataset_name, tfds_dir=None,
         download_and_prepare_kwargs = getattr(ds_builder, 'download_and_prepare_kwargs')
         delattr(ds_builder, 'download_and_prepare_kwargs')
     else:
-        download_and_prepare_kwargs = None
+        download_and_prepare_kwargs = {}
 
     return common_dataset_handler(
         ds_builder=ds_builder,
-        download_and_prepare_kwargs=download_and_prepare_kwargs,
-        scale=None, K=K, as_numpy=as_numpy
+        scale=None, K=K, as_numpy=as_numpy,
+        **download_and_prepare_kwargs
     )

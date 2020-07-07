@@ -43,7 +43,7 @@ class BaseTrainer(ABC):
         :type K: ```None or np or tf or Any```
 
         :param data_loader_kwargs: pass this as arguments to data_loader function
-        :type data_loader_kwargs: ```None or dict```
+        :type data_loader_kwargs: ```**data_loader_kwargs```
 
         :return: Dataset splits (by default, your train and test)
         :rtype: ```Tuple[tf.data.Dataset, tf.data.Dataset] or Tuple[np.ndarray, np.ndarray]```
@@ -63,10 +63,10 @@ class BaseTrainer(ABC):
         loaded_data = data_loader(**data_loader_kwargs)
         assert loaded_data is not None
 
-        if output_type is None:
+        if output_type is None or data_loader_kwargs['as_numpy']:
             self.data = loaded_data
         elif output_type == 'numpy':
-            self.data = to_numpy(loaded_data)
+            self.data = to_numpy(loaded_data, K)
         else:
             raise NotImplementedError(output_type)
 
@@ -91,7 +91,7 @@ class BaseTrainer(ABC):
               Number of classes
         """
 
-        self.model = model if len(model_kwargs) == 0 and not call else model(**(model_kwargs or {}))
+        self.model = model if len(model_kwargs) == 0 and not call else model(**model_kwargs)
         return self.model
 
     @abstractmethod

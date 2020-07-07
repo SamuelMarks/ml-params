@@ -25,7 +25,7 @@ def get_from_tensorflow_datasets(dataset_name, data_dir=None, K=None,
     :type scale: ```int or float or None```
 
     :param download_and_prepare_kwargs:
-    :type download_and_prepare_kwargs: ```None or dict```
+    :type download_and_prepare_kwargs: ```**download_and_prepare_kwargs```
 
     :return: Train and tests dataset splits
     :rtype: ```Tuple[tf.data.Dataset, tf.data.Dataset] or Tuple[np.ndarray, np.ndarray]```
@@ -34,6 +34,6 @@ def get_from_tensorflow_datasets(dataset_name, data_dir=None, K=None,
 
     return common_dataset_handler(
         ds_builder=tfds.builder(dataset_name, data_dir=data_dir),
-        download_and_prepare_kwargs=download_and_prepare_kwargs,
-        scale=scale, K=K, as_numpy=as_numpy
+        scale=scale, K=K, as_numpy=as_numpy,
+        **download_and_prepare_kwargs
     )

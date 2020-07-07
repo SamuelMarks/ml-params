@@ -19,10 +19,13 @@ Consistent CLI API for JAX, Trax, TensorFlow, Keras, and PyTorch
 
 ## Child projects
 
-  - https://github.com/SamuelMarks/ml-params-jax
-  - https://github.com/SamuelMarks/ml-params-trax
-  - https://github.com/SamuelMarks/ml-params-keras
   - https://github.com/SamuelMarks/ml-params-tensorflow
+  - https://github.com/SamuelMarks/ml-params-keras
+  - https://github.com/SamuelMarks/ml-params-flax
+  - https://github.com/SamuelMarks/ml-params-trax
+  - https://github.com/SamuelMarks/ml-params-jax
+  - https://github.com/SamuelMarks/ml-params-pytorch
+
 
 ## Related projects
 
