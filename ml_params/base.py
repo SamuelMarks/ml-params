@@ -116,7 +116,7 @@ class BaseTrainer(ABC):
         :type metric_emit_freq: ```None or (*args, **kwargs) -> bool```
 
         :param optimizer: Optimizer, can be a string (depending on the framework) or an instance of a class
-        :type callbacks: ```str or Callable or Any```
+        :type optimizer: ```str or Callable or Any```
 
         :param save_directory: Directory to save output in, e.g., weights in h5 files. If None, don't save.
         :type save_directory: ```None or str```

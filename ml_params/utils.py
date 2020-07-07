@@ -1,6 +1,3 @@
-from importlib import import_module
-
-
 def camel_case(st, upper=False):
     """
     Convert string to camel-case (upper or lower)
@@ -92,8 +89,9 @@ def to_numpy(obj, K=None, device=None):
         return obj.numpy()
     elif isinstance(obj, dict) and 'image' in obj and 'label' in obj:
         if module_name == 'jax.numpy':
-            def to_numpy(o, engine=None, dev=None):
-                return import_module('jax').device_put(o.numpy(), device=dev)
+            def to_numpy(o, _K=None):
+                import jax
+                return jax.device_put(o.numpy(), device=device)
 
         return {'image': to_numpy(obj['image'], K), 'label': to_numpy(obj['label'], K)}
 
