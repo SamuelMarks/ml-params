@@ -1,3 +1,6 @@
+from importlib import import_module
+
+
 def camel_case(st, upper=False):
     """
     Convert string to camel-case (upper or lower)
@@ -61,7 +64,7 @@ def common_dataset_handler(ds_builder, scale, K, as_numpy, **download_and_prepar
     return train_ds, test_ds
 
 
-def to_numpy(obj, K=None):
+def to_numpy(obj, K=None, device=None):
     """
     Convert input to numpy
 
@@ -70,6 +73,9 @@ def to_numpy(obj, K=None):
 
     :param K: backend engine, e.g., `np` or `tf`; defaults to `np`
     :type K: ```None or np or tf or Any```
+
+    :param device: The (optional) Device to which x should be transferred. If given, then the result is committed to the device. If the device parameter is None, then this operation behaves like the identity function if the operand is on any device already, otherwise it transfers the data to the default device, uncommitted.
+    :type device: ```None or Device```
 
     :return: numpy type, probably np.ndarray
     :rtype: ```np.ndarray```
@@ -85,6 +91,10 @@ def to_numpy(obj, K=None):
     elif hasattr(obj, 'numpy'):
         return obj.numpy()
     elif isinstance(obj, dict) and 'image' in obj and 'label' in obj:
+        if module_name == 'jax.numpy':
+            def to_numpy(o, engine=None, dev=None):
+                return import_module('jax').device_put(o.numpy(), device=dev)
+
         return {'image': to_numpy(obj['image'], K), 'label': to_numpy(obj['label'], K)}
 
     raise TypeError('Unable to convert {!r} to numpy'.format(type(obj)))
