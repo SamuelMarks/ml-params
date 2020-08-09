@@ -1,12 +1,14 @@
 ml_params
-===============
-![Python version range](https://img.shields.io/badge/python-2.7%20|%203.5%20|%203.5%20|%203.6%20|%203.7%20|%203.8%20|%203.9b5-blue.svg)
+=========
+![Python version range](https://img.shields.io/badge/python-2.7%20|%203.5%20|%203.6%20|%203.7%20|%203.8%20|%203.9b5-blue.svg)
 [![License](https://img.shields.io/badge/license-Apache--2.0%20OR%20MIT-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Linting, testing, and coverage](https://github.com/SamuelMarks/ml-params/workflows/Linting/badge.svg)](https://github.com/SamuelMarks/ml-params/actions)
 ![Documentation coverage](.github/doccoverage.svg)
 [![black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-Consistent CLI API for JAX, Trax, TensorFlow, Keras, and PyTorch
+Consistent CLI and Python SDK API for †every popular ML framework.
+
+†that's the goal anyway! - PR or just suggestions for other ML frameworks to add are welcome :grin:
 
 ## Install dependencies
 
@@ -20,19 +22,19 @@ Consistent CLI API for JAX, Trax, TensorFlow, Keras, and PyTorch
 
     python -m ml_params --help
 
-## Child projects
+## Official implementations
 
-  - https://github.com/SamuelMarks/ml-params-tensorflow
-  - https://github.com/SamuelMarks/ml-params-keras
-  - https://github.com/SamuelMarks/ml-params-flax
-  - https://github.com/SamuelMarks/ml-params-trax
-  - https://github.com/SamuelMarks/ml-params-jax
-  - https://github.com/SamuelMarks/ml-params-pytorch
+| Google  | Other vendors |
+| ------------- | ------------- |
+| [tensorflow](https://github.com/SamuelMarks/ml-params-tensorflow)  | [pytorch](https://github.com/SamuelMarks/ml-params-pytorch) |
+| [keras](https://github.com/SamuelMarks/ml-params-keras)  | [skorch](https://github.com/SamuelMarks/ml-params-skorch) |
+| [flax](https://github.com/SamuelMarks/ml-params-flax) | [sklearn](https://github.com/SamuelMarks/ml-params-sklearn) |
+| [trax](https://github.com/SamuelMarks/ml-params-trax) | [xgboost](https://github.com/SamuelMarks/ml-params-xgboost) |
+| [jax](https://github.com/SamuelMarks/ml-params-jax) | [cntk](https://github.com/SamuelMarks/ml-params-cntk) |
+ 
+## Related official projects
 
-
-## Related projects
-
-  - https://github.com/SamuelMarks/ml-prepare
+  - [ml-prepare](https://github.com/SamuelMarks/ml-prepare)
 
 ---
 

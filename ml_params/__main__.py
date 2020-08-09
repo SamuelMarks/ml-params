@@ -7,10 +7,10 @@ from argparse import ArgumentParser
 from enum import Enum
 from importlib import import_module
 
+from argparse_utils.actions.enum import EnumAction
 from pkg_resources import working_set
 
 from ml_params import __version__
-from ml_params.argparse_extras import EnumAction
 from ml_params.base import BaseTrainer
 
 engines = tuple(
