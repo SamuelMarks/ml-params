@@ -80,7 +80,10 @@ def to_numpy(obj, K=None, device=None):
     :param K: backend engine, e.g., `np` or `tf`; defaults to `np`
     :type K: ```Literal['np', 'tf']```
 
-    :param device: The (optional) Device to which x should be transferred. If given, then the result is committed to the device. If the device parameter is None, then this operation behaves like the identity function if the operand is on any device already, otherwise it transfers the data to the default device, uncommitted.
+    :param device: The (optional) Device to which x should be transferred.
+      If given, then the result is committed to the device.
+      If the device parameter is None, then this operation behaves like the identity function
+      if the operand is on any device already, otherwise it transfers the data to the default device, uncommitted.
     :type device: ```Optional[Device]```
 
     :return: numpy type, probably np.ndarray
@@ -98,6 +101,7 @@ def to_numpy(obj, K=None, device=None):
         return obj.numpy()
     elif isinstance(obj, dict) and "image" in obj and "label" in obj:
         if module_name == "jax.numpy":
+
             def to_numpy(o, _K=None):
                 """
                 Convert input to a DeviceArray

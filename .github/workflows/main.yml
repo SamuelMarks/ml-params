@@ -30,7 +30,7 @@ jobs:
                     flake8 . --count --select=$(printf '%s,' {A..Z}) --ignore='W503,E203' --show-source --max-complexity=10 --max-line-length=119 --statistics
             -   name: Doc coverage
                 run: |
-                    pip install interrogate codecov coverage
+                    pip install interrogate
                     interrogate --generate-badge '.github/doccoverage.svg'
                     sed -i 's/interrogate/doc coverage/g; s/.0%/%/g' .github/doccoverage.svg
                     grep -qF '100%' .github/doccoverage.svg && sed -i 's/370/300/g' .github/doccoverage.svg

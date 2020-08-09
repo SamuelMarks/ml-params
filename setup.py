@@ -19,6 +19,7 @@ if python_version_tuple()[0] == "3":
 else:
     from itertools import imap, ifilter
 
+
 def to_funcs(*paths):
     """
     Produce function tuples that produce the local and install dir, respectively.
@@ -33,6 +34,7 @@ def to_funcs(*paths):
         partial(path.join, path.dirname(__file__), package_name, *paths),
         partial(path.join, get_python_lib(prefix=""), package_name, *paths),
     )
+
 
 if __name__ == "__main__":
     package_name = "ml_params"

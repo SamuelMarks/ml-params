@@ -103,7 +103,8 @@ class BaseTrainer(ABC):
 
     def load_model_c(self, config):
         """
-        Load the model. Takes a model object, or a pipeline that downloads & configures before returning a model object.
+        Load the model.
+        Takes a model object, or a pipeline that downloads & configures before returning a model object.
 
         :param config: object constructed with all the relevant arguments for `load_model`
         :type config: ```Union[dict, Config, Any]```
@@ -115,14 +116,15 @@ class BaseTrainer(ABC):
 
     def load_model(self, model, call=False, **model_kwargs):
         """
-        Load the model. Takes a model object, or a pipeline that downloads & configures before returning a model object.
+        Load the model.
+        Takes a model object, or a pipeline that downloads & configures before returning a model object.
 
         :param model: model object, e.g., a tf.keras.Sequential, tl.Serial,  nn.Module instance
 
         :param call: whether to call `model()` even if `len(model_kwargs) == 0`
         :type call: ```bool```
 
-        :param \**model_kwargs: to be passed into the model. If empty, doesn't call, unless call=True.
+        :param **model_kwargs: to be passed into the model. If empty, doesn't call, unless call=True.
            to be passed into the model. If empty, doesn't call, unless call=True.
 
         :return self.model, e.g., the result of applying `model_kwargs` on model
@@ -177,30 +179,30 @@ class BaseTrainer(ABC):
         :type loss: ```str or Callable or Any```
 
         :param metrics: Collection of metrics to monitor, e.g., accuracy, f1
-        :type metrics: ```None or List[Callable or str] or Tuple[Callable or str]```
+        :type metrics: ```Optional[Union[List[Callable or str], Tuple[Callable or str]]```
 
-        :param metric_emit_freq: Frequency of metric emission, e.g., `lambda: epochs % 10 == 0`, defaults to every epoch
-        :type metric_emit_freq: ```None or (*args, **kwargs) -> bool```
+        :param metric_emit_freq: Frequency of metric emission, e.g., `lambda: epochs % 10 == 0`, default of every epoch
+        :type metric_emit_freq: ```Optional[Callable[[...], bool]]```
 
         :param optimizer: Optimizer, can be a string (depending on the framework) or an instance of a class
-        :type optimizer: ```str or Callable or Any```
+        :type optimizer: ```Union[str, Callable, Any]```
 
         :param save_directory: Directory to save output in, e.g., weights in h5 files. If None, don't save.
-        :type save_directory: ```None or str```
+        :type save_directory: ```Optional[str]```
 
         :param output_type: `if save_directory is not None` then save in this format, e.g., 'h5'.
-        :type output_type: ```str```
+        :type output_type: ```Optional[str]```
 
         :param writer: Writer for all output, could be a TensorBoard instance, a file handler like stdout or stderr
-        :type writer: ```stdout or Any```
+        :type writer: ```Union[stdout, Any]```
 
-        :param \*args:
-        :param \**kwargs:
+        :param *args:
+        :param **kwargs:
         :return:
         """
         assert epochs is not None and epochs > 0
 
 
-del ABC, abstractmethod, stdout, Tuple, Any, List, tf, np
+del ABC, abstractmethod, stdout, List
 
 __all__ = ["BaseTrainer"]
