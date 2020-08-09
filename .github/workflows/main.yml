@@ -46,3 +46,4 @@ jobs:
                         git commit -m '[.github/doccoverage.svg] Updated coverage'
                         git push origin master
                     fi
+                if: matrix.python-version != '2.7'
