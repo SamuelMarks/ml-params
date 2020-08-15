@@ -34,106 +34,18 @@ def _build_parser():
 
     parser = ArgumentParser(
         prog="python -m ml_params",
-        description="Consistent CLI API for JAX, Trax, TensorFlow, Keras, and PyTorch",
+        description="Consistent CLI for every popular ML framework.",
     )
     parser.add_argument(
         "--version", action="version", version="%(prog)s {}".format(__version__)
     )
 
     parser.add_argument(
-        "--engine",
-        type=Enum("EngineEnum", engine_enum),
-        action=EnumAction,
-        required=True,
+        "--engine", type=Enum("EngineEnum", engine_enum), action=EnumAction,
     )
 
-    parser.add_argument("--train", action="store_true")
-    parser.add_argument(
-        "--callback",
-        type=str,
-        action="append",
-        dest="callbacks",
-        required=True,
-        help="Collection of callables that are run inside the training loop",
-    )
-    parser.add_argument(
-        "--epochs",
-        type=int,
-        required=True,
-        help="number of epochs (must be greater than 0)",
-    )
-    parser.add_argument(
-        "--loss",
-        type=str,
-        required=True,
-        help="number of epochs (must be greater than 0)",
-    )
-    parser.add_argument(
-        "--metric",
-        type=str,
-        action="append",
-        dest="metrics",
-        required=True,
-        help="Collection of metrics to monitor, e.g., accuracy, f1",
-    )
-    parser.add_argument(
-        "--metric_emit_freq",
-        type=str,
-        required=True,
-        help="Frequency of metric emission, e.g., "
-        "`lambda epochs: epochs % 10 == 0`, defaults to every epoch",
-    )
-    parser.add_argument(
-        "--optimizer",
-        type=str,
-        action="append",
-        dest="optimizers",
-        required=True,
-        help="Optimizer, can be a string (depending on the framework) or an instance of a class",
-    )
-    parser.add_argument(
-        "--save_directory",
-        type=str,
-        required=True,
-        help="Optimizer, can be a string (depending on the framework) or an instance of a class",
-    )
-    parser.add_argument(
-        "--output_type",
-        type=str,
-        required=False,
-        help="`if save_directory is not None` then save in this format, e.g., 'h5'",
-    )
-    parser.add_argument(
-        "--writer",
-        type=Enum(
-            "WriterEnum",
-            (
-                ("STDOUT", "stdout"),
-                ("STDERR", "stderr"),
-                ("SummaryWriter", "tensorboard.SummaryWriter"),
-            ),
-        ),
-        required=False,
-        default="stdout",
-        action=EnumAction,
-        help="Writer for all output, e.g., STDOUT, STDERR, tensorboard.SummaryWriter",
-    )
+    parser.add_argument("--train", action="store_true", required=True)
 
-    parser.add_argument(
-        "--generate",
-        type=str,
-        help="Directory where the input files are partitioned. Can be symlinked. "
-        'Example contents: "ds_name/train/a.jpg"; "ds_name/test/b.jpg".',
-        # type=PathType(exists=True, type='dir')
-    )
-
-    parser.add_argument(
-        "--tfds",
-        type=str,
-        help="Directory for TFrecords and other metadata, "
-        "whence TensorFlow Datasets are prepared.",
-        # type=PathType(exists=True, type='dir')
-    )
     return parser
 
 
@@ -150,16 +62,7 @@ if __name__ == "__main__":
             ),
             "{upper_engine}Trainer".format(upper_engine=args.engine.name),
         )()  # type: BaseTrainer
-        trainer.train(
-            callbacks=args.callbacks,
-            epochs=args.epochs,
-            loss=args.loss,
-            metrics=args.metrics,
-            metric_emit_freq=args.metric_emit_freq,
-            optimizer=args.optimizer,
-            save_directory=args.save_directory,
-            output_type=args.output_type,
-        )
+        trainer.train(epochs=args.epochs,)
     else:
         _parser.error(
             "--train must be specified. Maybe in future this CLI will do more?"

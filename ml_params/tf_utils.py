@@ -34,7 +34,7 @@ def get_from_tensorflow_datasets(
     :type download_and_prepare_kwargs: ```**download_and_prepare_kwargs```
 
     :return: Train and tests dataset splits
-    :rtype: ```Tuple[tf.data.Dataset, tf.data.Dataset] or Tuple[np.ndarray, np.ndarray]```
+    :rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
     """
     import tensorflow_datasets as tfds
 

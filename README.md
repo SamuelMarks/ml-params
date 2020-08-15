@@ -10,6 +10,33 @@ Consistent CLI and Python SDK API for †every popular ML framework.
 
 †that's the goal anyway! - PR or just suggestions for other ML frameworks to add are welcome :grin:
 
+The approach is type-focussed, with explicit static code-generation of `Literal`ally:
+
+  - Transfer learning models
+  - Optimizers
+  - Losses
+  - &etc., including non-NN related scikit.learn, XGBoost
+
+For example, the following would be exposed, and thereby become useful from Python, in GUIs, REST/RPC APIs, and CLIs:
+```python
+from typing import Literal
+
+losses = Literal['BinaryCrossentropy', 'CategoricalCrossentropy', 'CategoricalHinge', 'CosineSimilarity', 'Hinge',
+                 'Huber', 'KLD', 'KLDivergence', 'LogCosh', 'MAE', 'MAPE', 'MSE', 'MSLE', 'MeanAbsoluteError',
+                 'MeanAbsolutePercentageError', 'MeanSquaredError', 'MeanSquaredLogarithmicError', 'Poisson',
+                 'Reduction', 'SparseCategoricalCrossentropy', 'SquaredHinge']
+```
+
+## Developer guide
+
+The [doctrans](https://github.com/SamuelMarks/doctrans) project was developed to make ml-params—and its implementations—possible… without a ridiculous amount of hand-written duplication. The duplication is still present, but doctrans will automatically keep them in sync, multi-directionally. So you can edit any of these and it'll translate the changes until every 'interface' is equivalent:
+
+  - CLI
+  - Class
+  - Function/method
+
+It will also expand a specific property, like your `get_losses` function could generate the aforementioned `Literal`.
+
 ## Install dependencies
 
     pip install -r requirements.txt
@@ -24,8 +51,8 @@ Consistent CLI and Python SDK API for †every popular ML framework.
 
 ## Official implementations
 
-| Google  | Other vendors |
-| ------------- | ------------- |
+| Google | Other vendors |
+| -------| ------------- |
 | [tensorflow](https://github.com/SamuelMarks/ml-params-tensorflow)  | [pytorch](https://github.com/SamuelMarks/ml-params-pytorch) |
 | [keras](https://github.com/SamuelMarks/ml-params-keras)  | [skorch](https://github.com/SamuelMarks/ml-params-skorch) |
 | [flax](https://github.com/SamuelMarks/ml-params-flax) | [sklearn](https://github.com/SamuelMarks/ml-params-sklearn) |

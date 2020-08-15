@@ -10,11 +10,14 @@ from ml_params.datasets import load_data_from_tfds_or_ml_prepare
 from ml_params.utils import to_numpy, to_d
 
 try:
-    import tensorflow as tf
     import numpy as np
 except ImportError:
-    tf = None  # `tf` is only used for typings in this file
     np = None  # `np` is only used for typings in this file
+
+try:
+    import tensorflow as tf
+except ImportError:
+    tf = None  # `tf` is only used for typings in this file
 
 
 class BaseTrainer(ABC):
@@ -58,12 +61,13 @@ class BaseTrainer(ABC):
 
         :param data_loader: function that returns the expected data type.
          Defaults to TensorFlow Datasets and ml_prepare combined one.
-        :type data_loader: ```Callable[[...], Union[tf.data.Datasets, Any]]```
+        :type data_loader: ```Callable[[...], Union[Tuple[tf.data.Dataset, tf.data.Dataset],
+         Tuple[np.ndarray, np.ndarray], Tuple[Any, Any]]```
 
-        :param data_type: incoming data type, defaults to 'infer'
+        :param data_type: incoming data type
         :type data_type: ```str```
 
-        :param output_type: outgoing data_type, defaults to no conversion
+        :param output_type: outgoing data_type
         :type output_type: ```Optional[Literal['numpy']]```
 
         :param K: backend engine, e.g., `np` or `tf`
@@ -126,6 +130,7 @@ class BaseTrainer(ABC):
 
         :param **model_kwargs: to be passed into the model. If empty, doesn't call, unless call=True.
            to be passed into the model. If empty, doesn't call, unless call=True.
+        :type **model_kwargs: ```**model_kwargs```
 
         :return self.model, e.g., the result of applying `model_kwargs` on model
 
@@ -152,53 +157,20 @@ class BaseTrainer(ABC):
         return self.train(**to_d(config))
 
     @abstractmethod
-    def train(
-        self,
-        callbacks,
-        epochs,
-        loss,
-        metrics,
-        metric_emit_freq,
-        optimizer,
-        save_directory,
-        output_type="infer",
-        writer=stdout,
-        *args,
-        **kwargs
-    ):
+    def train(self, epochs, *args, **kwargs):
         """
         Run the training loop for your ML pipeline.
-
-        :param callbacks: Collection of callables that are run inside the training loop
-        :type callbacks: ```None or List[Callable] or Tuple[Callable]```
 
         :param epochs: number of epochs (must be greater than 0)
         :type epochs: ```int```
 
-        :param loss: Loss function, can be a string (depending on the framework) or an instance of a class
-        :type loss: ```str or Callable or Any```
+        :param *args: Arbitrary position arguments
+        :type *args: ```*args```
 
-        :param metrics: Collection of metrics to monitor, e.g., accuracy, f1
-        :type metrics: ```Optional[Union[List[Callable or str], Tuple[Callable or str]]```
+        :param **kwargs: Arbitrary keyword arguments.
+        :type **kwargs: ```**kwargs``
 
-        :param metric_emit_freq: Frequency of metric emission, e.g., `lambda: epochs % 10 == 0`, default of every epoch
-        :type metric_emit_freq: ```Optional[Callable[[...], bool]]```
-
-        :param optimizer: Optimizer, can be a string (depending on the framework) or an instance of a class
-        :type optimizer: ```Union[str, Callable, Any]```
-
-        :param save_directory: Directory to save output in, e.g., weights in h5 files. If None, don't save.
-        :type save_directory: ```Optional[str]```
-
-        :param output_type: `if save_directory is not None` then save in this format, e.g., 'h5'.
-        :type output_type: ```Optional[str]```
-
-        :param writer: Writer for all output, could be a TensorBoard instance, a file handler like stdout or stderr
-        :type writer: ```Union[stdout, Any]```
-
-        :param *args:
-        :param **kwargs:
-        :return:
+        :raises AssertionError: Whence `epochs is None or < 1`
         """
         assert epochs is not None and epochs > 0
 

@@ -12,7 +12,7 @@ from ml_params.utils import common_dataset_handler
 
 def load_data_from_ml_prepare(
     dataset_name,
-    tfds_dir=None,
+    tfds_dir="~/tensorflow_datasets",
     generate_dir=None,
     retrieve_dir=None,
     K=None,
@@ -74,7 +74,11 @@ def load_data_from_ml_prepare(
 
 
 def load_data_from_tfds_or_ml_prepare(
-    dataset_name, tfds_dir=None, K=None, as_numpy=False, **data_loader_kwargs
+    dataset_name,
+    tfds_dir="~/tensorflow_datasets",
+    K=None,
+    as_numpy=False,
+    **data_loader_kwargs
 ):
     """
     Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library
@@ -82,7 +86,7 @@ def load_data_from_tfds_or_ml_prepare(
     :param dataset_name: name of dataset
     :type dataset_name: ```str```
 
-    :param tfds_dir: directory to look for models in. Default is ~/tensorflow_datasets.
+    :param tfds_dir: directory to look for models in.
     :type tfds_dir: ```Optional[str]```
 
     :param K: backend engine, e.g., `np` or `tf`
