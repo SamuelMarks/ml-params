@@ -27,7 +27,8 @@ def common_dataset_handler(
     Helper function that is to be used by the different dataset builders
 
     :param ds_builder:
-    :type ds_builder: ```Union[tfds.core.DatasetBuilder, Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]```
+    :type ds_builder: ```Union[tfds.core.DatasetBuilder, Tuple[tf.data.Dataset, tf.data.Dataset],
+     Tuple[np.ndarray, np.ndarray]```
 
     :param scale: rescale input (divide) by this amount, None for do nothing
     :type scale: ```Optional[Union[int, float]]```
