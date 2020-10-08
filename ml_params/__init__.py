@@ -11,7 +11,7 @@ from os import path
 import yaml
 
 __author__ = "Samuel Marks"
-__version__ = "0.0.8"
+__version__ = "0.0.9"
 
 
 def get_logger(name=None):
@@ -21,7 +21,7 @@ def get_logger(name=None):
     :param name: Name of logger instance. Usually the module name with filename dot-appended. None gives root logger.
     :type name: Optional[str]
 
-    :returns: logger instance
+    :return: logger instance
     :rtype: ```logging.Logger```
     """
     with open(path.join(path.dirname(__file__), "_data", "logging.yml"), "rt") as f:

@@ -46,7 +46,8 @@ class BaseTrainer(ABC):
 
     def load_data(
         self,
-        dataset_name,
+        *,
+        dataset_name: str,
         data_loader=load_data_from_tfds_or_ml_prepare,
         data_type="infer",
         output_type=None,
@@ -55,6 +56,8 @@ class BaseTrainer(ABC):
     ):
         """
         Load the data for your ML pipeline. Will be fed into `train`.
+
+        :param *: syntactic note indicating everything after is a keyword-only argument
 
         :param dataset_name: name of dataset
         :type dataset_name: ```str```
@@ -118,12 +121,15 @@ class BaseTrainer(ABC):
         """
         return self.load_model(**to_d(config))
 
-    def load_model(self, model, call=False, **model_kwargs):
+    def load_model(self, *, model, call=False, **model_kwargs):
         """
         Load the model.
         Takes a model object, or a pipeline that downloads & configures before returning a model object.
 
+        :param *: syntactic note indicating everything after is a keyword-only argument
+
         :param model: model object, e.g., a tf.keras.Sequential, tl.Serial,  nn.Module instance
+        :type model: ```Any```
 
         :param call: whether to call `model()` even if `len(model_kwargs) == 0`
         :type call: ```bool```
@@ -132,13 +138,9 @@ class BaseTrainer(ABC):
            to be passed into the model. If empty, doesn't call, unless call=True.
         :type **model_kwargs: ```**model_kwargs```
 
-        :return self.model, e.g., the result of applying `model_kwargs` on model
-
-        :Keyword Arguments:
-            * *num_classes* (``int``) --
-              Number of classes
+        :return: self.model, e.g., the result of applying `model_kwargs` on model
+        :rtype: ```Any```
         """
-
         self.model = (
             model if len(model_kwargs) == 0 and not call else model(**model_kwargs)
         )
@@ -157,21 +159,16 @@ class BaseTrainer(ABC):
         return self.train(**to_d(config))
 
     @abstractmethod
-    def train(self, epochs, *args, **kwargs):
+    def train(self, *, epochs):
         """
         Run the training loop for your ML pipeline.
 
+        :param *: syntactic note indicating everything after is a keyword-only argument
+
         :param epochs: number of epochs (must be greater than 0)
         :type epochs: ```int```
-
-        :param *args: Arbitrary position arguments
-        :type *args: ```*args```
-
-        :param **kwargs: Arbitrary keyword arguments.
-        :type **kwargs: ```**kwargs``
-
-        :raises AssertionError: Whence `epochs is None or < 1`
         """
+        # :raises AssertionError: Whence `epochs is None or < 1`
         assert epochs is not None and epochs > 0
 
 
