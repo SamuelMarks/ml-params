@@ -141,8 +141,10 @@ class BaseTrainer(ABC):
         :return: self.model, e.g., the result of applying `model_kwargs` on model
         :rtype: ```Any```
         """
+        if not callable(model) or isinstance(model, str):
+            call = False
         self.model = (
-            model if len(model_kwargs) == 0 and not call else model(**model_kwargs)
+            model if len(model_kwargs) == 0 or call is False else model(**model_kwargs)
         )
         return self.model
 

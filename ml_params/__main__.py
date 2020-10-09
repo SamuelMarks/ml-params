@@ -4,18 +4,18 @@ CLI interface
 """
 
 import sys
-from argparse import ArgumentParser
-from collections import OrderedDict, deque
+from argparse import ArgumentParser, SUPPRESS
+from collections import deque
 from enum import Enum
 from importlib import import_module
+from itertools import filterfalse
 from operator import itemgetter
 from os import environ
 
 from argparse_utils.actions.enum import EnumAction
-from pkg_resources import working_set
-
 from ml_params import __version__
 from ml_params.base import BaseTrainer
+from pkg_resources import working_set
 
 if sys.version[0] == "3":
     string_types = (str,)
@@ -71,7 +71,7 @@ def get_one_arg(args, argv=None):
 
     :rtype: ```Optional[str]```
     """
-    engine_val, next_is_sym = None, None
+    next_is_sym = None
     for e in argv or sys.argv:
         for eng in args:
             if e.startswith(eng):
@@ -97,7 +97,9 @@ if __name__ == "__main__":
 
     _parser = _build_parser()
 
-    if isinstance(engine, (type(None), string_types)):
+    if "--version" in sys.argv[1:]:
+        _parser.parse_args(["--version"])
+    elif isinstance(engine, (type(None), string_types)):
         _parser.print_help()
         _parser.error(
             "--engine must be provided, and from installed ml-params-* options"
@@ -114,6 +116,7 @@ if __name__ == "__main__":
 
     trainer: BaseTrainer = Trainer()
 
+    # Add CLI parsers from dynamically imported library
     subparsers = _parser.add_subparsers(
         help="subcommand to run. Hacked to be chainable.", dest="command"
     )
@@ -129,11 +132,53 @@ if __name__ == "__main__":
         maxlen=0,
     )
 
+    # Make required CLI arguments optional iff they are required but have a default value.
+
+    def remove_required(sub_parser_action_idx, argument_parser_name, action_idx):
+        _parser._subparsers._group_actions[sub_parser_action_idx].choices[
+            argument_parser_name
+        ]._actions[action_idx].required = False
+
+    deque(
+        map(
+            lambda idx_sub_parser_action: deque(
+                map(
+                    lambda name_argument_parser: deque(
+                        map(
+                            lambda idx_action: remove_required(
+                                sub_parser_action_idx=idx_sub_parser_action[0],
+                                argument_parser_name=name_argument_parser[0],
+                                action_idx=idx_action[0],
+                            ),
+                            filterfalse(
+                                lambda idx_action: idx_action[1].default
+                                in frozenset((None, SUPPRESS)),
+                                enumerate(name_argument_parser[1]._actions),
+                            ),
+                        ),
+                        maxlen=0,
+                    ),
+                    idx_sub_parser_action[1].choices.items(),
+                ),
+                maxlen=0,
+            ),
+            enumerate(_parser._subparsers._group_actions),
+        ),
+        maxlen=0,
+    )
+
+    # Parse the CLI input continuously—i.e., for each subcommand—until completion. `trainer` holds/updates state.
     rest = sys.argv[1:]
-    while len(rest):
+    while len(rest) != 0:
         args, rest = _parser.parse_known_args(rest)
 
         command = args.command
         getattr(trainer, command)(
-            **{k: v for k, v in vars(args).items() if v is not None and k != "command"}
+            **{
+                k: v
+                for k, v in vars(args).items()
+                if isinstance(v, dict)
+                or v not in frozenset((None, "None"))
+                and k != "command"
+            }
         )
