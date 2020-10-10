@@ -26,7 +26,7 @@ def common_dataset_handler(
     """
     Helper function that is to be used by the different dataset builders
 
-    :param ds_builder:
+    :param ds_builder: dataset builder
     :type ds_builder: ```Union[tfds.core.DatasetBuilder, Tuple[tf.data.Dataset, tf.data.Dataset],
      Tuple[np.ndarray, np.ndarray]```
 
@@ -43,7 +43,7 @@ def common_dataset_handler(
     :type download_and_prepare_kwargs: ```**download_and_prepare_kwargs```
 
     :return: Train and tests dataset splits
-    :rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
+    :rtype: ```Union[Tuple[tf.data.Dataset,tf.data.Dataset,tfds.core.DatasetInfo], Tuple[np.ndarray,np.ndarray,Any]]```
     """
     if hasattr(ds_builder, "download_and_prepare") and hasattr(
         ds_builder, "as_dataset"
@@ -67,7 +67,7 @@ def common_dataset_handler(
         train_ds["image"] = K.float32(train_ds["image"]) / scale
         test_ds["image"] = K.float32(test_ds["image"]) / scale
 
-    return train_ds, test_ds
+    return train_ds, test_ds, train_ds._info
 
 
 def to_numpy(obj, K=None, device=None):

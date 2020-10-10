@@ -172,8 +172,7 @@ if __name__ == "__main__":
     while len(rest) != 0:
         args, rest = _parser.parse_known_args(rest)
 
-        command = args.command
-        getattr(trainer, command)(
+        getattr(trainer, args.command)(
             **{
                 k: v
                 for k, v in vars(args).items()

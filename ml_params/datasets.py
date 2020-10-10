@@ -44,7 +44,7 @@ def load_data_from_ml_prepare(
     :type scale: ```Tuple[int, int]```
 
     :return: Train and tests dataset splits
-    :rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
+    :rtype: ```Union[Tuple[tf.data.Dataset,tf.data.Dataset,tfds.core.DatasetInfo], Tuple[np.ndarray,np.ndarray,Any]]```
     """
     from ml_prepare.exectors import build_tfds_dataset
 
