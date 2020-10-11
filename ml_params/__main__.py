@@ -138,6 +138,18 @@ if __name__ == "__main__":
     # Make required CLI arguments optional iff they are required but have a default value.
 
     def remove_required(sub_parser_action_idx, argument_parser_name, action_idx):
+        """
+        Set the required parameter to False
+
+        :param sub_parser_action_idx: index of sub_parser_action
+        :type sub_parser_action_idx: ```str```
+
+        :param argument_parser_name: name of argument_parser
+        :type argument_parser_name: ```str```
+
+        :param action_idx: index of action
+        :type action_idx: ```int```
+        """
         _parser._subparsers._group_actions[sub_parser_action_idx].choices[
             argument_parser_name
         ]._actions[action_idx].required = False
