@@ -117,7 +117,7 @@ if __name__ == "__main__":
         trainer_mod, next(filter(lambda c: c.endswith("Trainer"), trainer_mod.__all__))
     )
 
-    trainer: BaseTrainer = Trainer()
+    trainer = Trainer()  # type: BaseTrainer
 
     # Add CLI parsers from dynamically imported library
     subparsers = _parser.add_subparsers(
