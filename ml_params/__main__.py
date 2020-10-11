@@ -20,7 +20,10 @@ from pkg_resources import working_set
 if sys.version[0] == "3":
     string_types = (str,)
 else:
-    string_types = (basestring,)
+    try:
+        string_types = (basestring,)
+    except NameError:
+        string_types = (str,)
 
 engines = tuple(
     filter(
