@@ -1,6 +1,6 @@
 ml_params
 =========
-![Python version range](https://img.shields.io/badge/python-2.7%20|%203.5%20|%203.6%20|%203.7%20|%203.8%20|%203.9-blue.svg)
+![Python version range](https://img.shields.io/badge/python-3.5%20|%203.6%20|%203.7%20|%203.8%20|%203.9-blue.svg)
 [![License](https://img.shields.io/badge/license-Apache--2.0%20OR%20MIT-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Linting, testing, and coverage](https://github.com/SamuelMarks/ml-params/workflows/Linting/badge.svg)](https://github.com/SamuelMarks/ml-params/actions)
 ![Tested OSs, others may work](https://img.shields.io/badge/Tested%20on-Linux%20|%20macOS%20|%20Windows-green)
@@ -204,6 +204,9 @@ Now let's run multiple commands, which behind the scenes constructs a `Trainer` 
 ## Related official projects
 
   - [ml-prepare](https://github.com/SamuelMarks/ml-prepare)
+
+## Python 2.7
+Python 2.7 support isn't difficult. Just remove the keyword-only arguments. For the type annotations, use `doctrans` to automatically replace them with docstrings. Effort has been put into making everything else Python 2/3 compatible.
 
 ---
 
