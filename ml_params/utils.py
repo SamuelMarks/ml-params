@@ -120,6 +120,11 @@ def to_numpy(obj, K=None, device=None):
                 return jax.device_put(o.numpy(), device=device)
 
         return {"image": to_numpy(obj["image"], K), "label": to_numpy(obj["label"], K)}
+    elif type(obj).__name__ == "PrefetchDataset":
+        # ^`isinstance` said `arg 2 must be a type or tuple of types`
+        import tensorflow_datasets as tfds
+
+        return tfds.as_numpy(obj)
 
     raise TypeError("Unable to convert {!r} to numpy".format(type(obj)))
 

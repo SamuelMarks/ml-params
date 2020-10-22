@@ -192,7 +192,8 @@ if __name__ == "__main__":
                 k: v
                 for k, v in vars(args).items()
                 if isinstance(v, dict)
-                or v not in frozenset((None, "None"))
+                or v is not None
+                and v != "None"
                 and k != "command"
             }
         )

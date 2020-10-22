@@ -187,8 +187,8 @@ Now let's run multiple commands, which behind the scenes constructs a `Trainer` 
                           train --epochs 3 \
                           --loss 'CategoricalCrossentropy' \
                           --optimizer 'Adam' \
-                          --output_type 'numpy' 
-                          --validation_split '0.5' 
+                          --output_type 'numpy' \
+                          --validation_split '0.5' \
                           --batch_size 128
 
 ## Official implementations

@@ -3,7 +3,9 @@ Base that is implemented by each child repo, e.g., ml-params-tensorflow, ml-para
 """
 
 from abc import ABC, abstractmethod
+from functools import partial
 from sys import stdout
+from itertools import chain
 from typing import Tuple, Any, List, Union, Optional
 
 from ml_params.datasets import load_data_from_tfds_or_ml_prepare
@@ -102,7 +104,11 @@ class BaseTrainer(ABC):
         if output_type is None or data_loader_kwargs["as_numpy"]:
             self.data = loaded_data
         elif output_type == "numpy":
-            self.data = to_numpy(loaded_data, K)
+            self.data = tuple(
+                chain.from_iterable(
+                    (map(partial(to_numpy, K=K), loaded_data[:2]), (loaded_data[2],))
+                )
+            )
         else:
             raise NotImplementedError(output_type)
 
