@@ -2,7 +2,7 @@
 """
 CLI interface
 """
-
+import os
 import sys
 from argparse import ArgumentParser, SUPPRESS
 from collections import deque
@@ -36,6 +36,25 @@ engine_enum = tuple(
 )
 
 
+class ImportArgumentParser(ArgumentParser):
+    """ Attempt at creating an importing argument parser """
+
+    def convert_arg_line_to_args(self, arg_line):
+        """Convert the arg line to args, here just experimenting to logfile
+
+        :param arg_line: The argument line
+        :type arg_line: ```str```
+
+        :return: The argument line
+        :rtype: ```str```
+        """
+        with open(os.path.join(os.getcwd(), "log.txt"), "wt") as f:
+            f.write("arg_line: {!r} ;".format(arg_line))
+        return super(ImportArgumentParser, self).convert_arg_line_to_args(
+            arg_line=arg_line
+        )
+
+
 def _build_parser():
     """
     Parser builder
@@ -44,7 +63,7 @@ def _build_parser():
     :rtype: ```ArgumentParser```
     """
 
-    parser = ArgumentParser(
+    parser = ImportArgumentParser(
         prog="python -m ml_params",
         description="Consistent CLI for every popular ML framework.",
     )
@@ -66,16 +85,20 @@ def get_one_arg(args, argv=None):
     """
     Hacked together parser to get just one value
 
-    :param args:
+    :param args: Name of arg to retrieve. If multiple specified, return first found.
     :type args: ```Tuple[str]```
 
     :param argv: Defaults to `sys.argv`
     :type argv: ```Optional[List[str]]```
 
+    :return: First matching arg value
     :rtype: ```Optional[str]```
     """
+    assert isinstance(args, (tuple, list)), "Expected tuple|list got {!r}".format(
+        type(args)
+    )
     next_is_sym = None
-    for e in argv or sys.argv:
+    for e in argv or sys.argv[1:]:
         for eng in args:
             if e.startswith(eng):
                 if e == eng:
@@ -86,7 +109,8 @@ def get_one_arg(args, argv=None):
                 return e
 
 
-if __name__ == "__main__":
+def main():
+    """ Main CLI. Actually perform the argument parsing &etc. """
     engine_name = engine = get_one_arg(("-e", "--engine")) or environ.get(
         "ML_PARAMS_ENGINE"
     )
@@ -126,7 +150,8 @@ if __name__ == "__main__":
 
     deque(
         (
-            getattr(engine, func_name)(
+            print("Adding:", func_name, ";")
+            or getattr(engine, func_name)(
                 subparsers.add_parser(func_name[: -len("_parser")])
             )
             for func_name in sorted(engine.__all__)
@@ -134,6 +159,7 @@ if __name__ == "__main__":
         ),
         maxlen=0,
     )
+    exit(6)
 
     # Make required CLI arguments optional iff they are required but have a default value.
 
@@ -186,6 +212,10 @@ if __name__ == "__main__":
     rest = sys.argv[1:]
     while len(rest) != 0:
         args, rest = _parser.parse_known_args(rest)
+        print(args)
+
+        # if args.command == 'train':
+        #    exit(5)
 
         getattr(trainer, args.command)(
             **{
@@ -197,3 +227,12 @@ if __name__ == "__main__":
                 and k != "command"
             }
         )
+
+
+def run_main():
+    """" Run the `main` function if `__name__ == "__main__"` """
+    if __name__ == "__main__":
+        main()
+
+
+run_main()

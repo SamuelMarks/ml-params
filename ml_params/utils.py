@@ -1,5 +1,5 @@
 """
-Collection of no-dependency utility functions
+Collection of utility functions
 """
 
 
@@ -144,3 +144,6 @@ def to_d(obj):
         if isinstance(obj, dict)
         else {attr: getattr(obj, attr) for attr in dir(obj) if not attr.startswith("_")}
     )
+
+
+__all__ = ["camel_case", "common_dataset_handler", "to_d", "to_numpy"]
