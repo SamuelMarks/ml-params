@@ -1,2 +1,3 @@
 https://github.com/offscale/argparse-utils/archive/master.zip#egg=argparse-utils
 https://github.com/SamuelMarks/ml-prepare/archive/master.zip#egg=ml-prepare
+-r https://raw.githubusercontent.com/SamuelMarks/ml-prepare/master/requirements.txt
