@@ -62,7 +62,7 @@ class TestMain(TestCase):
             " and from installed ml-params-* options\n".format(engines=engines),
         )
         self.assertEqual(
-            help_text.replace(" ", ""),
+            help_text.replace(" ", "").replace("\n", ""),
             "usage: python -m ml_params [-h] [--version] [--engine {engines}]\n\n"
             "Consistent CLI for every popular ML framework.\n\n"
             "optional arguments:\n"
@@ -71,9 +71,7 @@ class TestMain(TestCase):
             "  --engine {engines}"
             '                        ML engine, e.g., "TensorFlow", "JAX", "pytorch"\n'.format(
                 engines=engines
-            ).replace(
-                " ", ""
-            ),
+            ).replace(" ", "").replace("\n", ""),
         )
         self.assertEqual(e.exception.code, SystemExit(2).code)
 
