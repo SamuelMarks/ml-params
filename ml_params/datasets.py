@@ -4,7 +4,10 @@ Implementation of some common datasets, expected to be called from projects whic
 
 from functools import partial
 
-from ml_prepare.datasets import datasets2classes
+try:
+    from ml_prepare.datasets import datasets2classes
+except ImportError:
+    datasets2classes = {}
 
 from ml_params.tf_utils import get_from_tensorflow_datasets
 from ml_params.utils import common_dataset_handler
