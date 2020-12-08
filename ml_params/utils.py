@@ -93,7 +93,7 @@ def to_numpy(obj, K=None, device=None):
     module_name = "numpy" if K is None else K.__name__
 
     if obj is None:
-        return K.nan
+        return None if K is None else K.nan
     elif type(obj).__module__ == module_name:
         return obj
     elif hasattr(obj, "as_numpy"):
@@ -103,7 +103,7 @@ def to_numpy(obj, K=None, device=None):
     elif isinstance(obj, dict) and "image" in obj and "label" in obj:
         if module_name == "jax.numpy":
 
-            def to_numpy(o, _K=None):
+            def __to_numpy(o, _K=None):
                 """
                 Convert input to a DeviceArray
 
@@ -120,7 +120,13 @@ def to_numpy(obj, K=None, device=None):
 
                 return jax.device_put(o.numpy(), device=device)
 
-        return {"image": to_numpy(obj["image"], K), "label": to_numpy(obj["label"], K)}
+        else:
+            __to_numpy = _to_numpy
+
+        return {
+            "image": __to_numpy(obj["image"], K),
+            "label": __to_numpy(obj["label"], K),
+        }
     elif type(obj).__name__ == "PrefetchDataset":
         # ^`isinstance` said `arg 2 must be a type or tuple of types`
         import tensorflow_datasets as tfds
@@ -128,6 +134,10 @@ def to_numpy(obj, K=None, device=None):
         return tfds.as_numpy(obj)
 
     raise TypeError("Unable to convert {!r} to numpy".format(type(obj)))
+
+
+# Alias need unlike in JavaScript where you have proper hoisting
+_to_numpy = to_numpy
 
 
 def to_d(obj):

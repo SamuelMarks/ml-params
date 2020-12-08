@@ -135,7 +135,6 @@ def main(argv=None):
         _parser.parse_args(["--version"])
     elif isinstance(engine, (type(None), string_types)):
         _parser.print_help(file=sys.stderr)
-        print("engine:", engine, ";")
         _parser.error(
             "--engine must be provided, and from installed ml-params-* options"
         )
@@ -167,7 +166,6 @@ def main(argv=None):
         ),
         maxlen=0,
     )
-    exit(6)
 
     # Make required CLI arguments optional iff they are required but have a default value.
 
@@ -217,7 +215,7 @@ def main(argv=None):
     )
 
     # Parse the CLI input continuously—i.e., for each subcommand—until completion. `trainer` holds/updates state.
-    rest = argv[1:]
+    rest = argv
     while len(rest) != 0:
         args, rest = _parser.parse_known_args(rest)
         print(args)

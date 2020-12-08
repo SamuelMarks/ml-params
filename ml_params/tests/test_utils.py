@@ -38,5 +38,33 @@ class TestUtils(TestCase):
             )
         )
 
+    def test_to_numpy(self) -> None:
+        """ Many variants of `to_numpy` to test """
+        self.assertIsNone(ml_params.utils.to_numpy(None))
+        self.assertIs(
+            ml_params.utils.to_numpy(
+                ml_params.utils, K=type("builtins", (object,), {"__name__": "builtins"})
+            ),
+            ml_params.utils,
+        )
+        self.assertEqual(
+            ml_params.utils.to_numpy(
+                type("_", tuple(), {"as_numpy": lambda: "as_numpy"})
+            ),
+            "as_numpy",
+        )
+        self.assertEqual(
+            ml_params.utils.to_numpy(type("_", tuple(), {"numpy": lambda: "numpy"})),
+            "numpy",
+        )
+        image_label = {"image": None, "label": None}
+        self.assertDictEqual(ml_params.utils.to_numpy(image_label), image_label)
+        with self.assertRaises(TypeError) as e:
+            self.assertIsNone(ml_params.utils.to_numpy(type))
+        self.assertEqual(
+            e.exception.args,
+            TypeError("Unable to convert <class 'type'> to numpy").args,
+        )
+
 
 unittest_main()

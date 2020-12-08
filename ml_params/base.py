@@ -1,11 +1,10 @@
 """
 Base that is implemented by each child repo, e.g., ml-params-tensorflow, ml-params-pytorch
 """
-
 from abc import ABC, abstractmethod
 from functools import partial
-from sys import stdout
 from itertools import chain
+from sys import stdout
 from typing import Tuple, Any, List, Union, Optional
 
 from ml_params.datasets import load_data_from_tfds_or_ml_prepare

@@ -4,6 +4,7 @@ Tests for the __main__ script
 
 import sys
 from io import StringIO
+from os import environ
 from unittest import TestCase, skipIf
 from unittest.mock import MagicMock, patch
 
@@ -40,47 +41,77 @@ class TestMain(TestCase):
             run_main()
             self.assertEqual(g.call_count, 1)
 
+    @skipIf(sys.version_info[:2] == (3, 5), "Enums are broken in 3.5?")
     def test_main(self) -> None:
         """ Tests that main will be called """
 
         with self.assertRaises(SystemExit) as e, patch(
             "sys.stdout", new_callable=StringIO
-        ) as out, patch("sys.stderr", new_callable=StringIO) as err:
+        ) as out, patch("sys.stderr", new_callable=StringIO) as err, patch(
+            "sys.argv", [sys.executable]
+        ):
             self.assertIsNone(main())
 
-        help_text, usage, engine_help_text = err.getvalue().rpartition("usage")
-        engine_help_text = usage + engine_help_text
+        help_text, _usage, engine_help_text = err.getvalue().rpartition("usage")
+        engine_help_text = _usage + engine_help_text
         self.assertEqual(
             engine_help_text,
-            "usage: python -m ml_params [-h] [--version] [--engine {}]\n"
+            "usage: python -m ml_params [-h] [--version] [--engine {tensorflow}]\n"
             "python -m ml_params: error: --engine must be provided,"
             " and from installed ml-params-* options\n",
         )
         self.assertEqual(
             help_text,
-            "usage: python -m ml_params [-h] [--version] [--engine {}]\n\n"
+            "usage: python -m ml_params [-h] [--version] [--engine {tensorflow}]\n\n"
             "Consistent CLI for every popular ML framework.\n\n"
             "optional arguments:\n"
-            "  -h, --help   show this help message and exit\n"
-            "  --version    show program's version number and exit\n"
-            '  --engine {}  ML engine, e.g., "TensorFlow", "JAX", "pytorch"\n',
+            "  -h, --help            show this help message and exit\n"
+            "  --version             show program's version number and exit\n"
+            "  --engine {tensorflow}\n"
+            '                        ML engine, e.g., "TensorFlow", "JAX", "pytorch"\n',
         )
         self.assertEqual(e.exception.code, SystemExit(2).code)
 
-        help_text = out.getvalue()
+        self.assertEqual(out.getvalue(), "")
 
         # With engine set
         mod = "ml-params-tensorflow"
         if mod not in sys.modules:
             sys.modules[mod] = ml_params  # TODO: Some fake test module
 
-        with self.assertRaises(SystemExit), patch(
+        env_backup = dict(environ.items())
+        environ["ML_PARAMS_ENGINE"] = "tensorflow"
+        _argv = ["--engine", "tensorflow", "-h"]
+        with self.assertRaises(SystemExit) as e, patch(
             "sys.stdout", new_callable=StringIO
-        ) as out, patch("sys.stderr", new_callable=StringIO) as err:
-            self.assertIsNone(main(["--engine", "tensorflow", "-h"]))
-        self.assertEqual(help_text, out.getvalue())
-        # TODO: Get SystemExit(0)
-        self.assertEqual(e.exception.code, SystemExit(2).code)
+        ) as out, patch("sys.stderr", new_callable=StringIO) as err, patch(
+            "sys.argv", [sys.executable] + _argv
+        ), patch(
+            "os.environ", environ
+        ):
+            self.assertIsNone(main(_argv))
+        self.assertEqual(e.exception.code, SystemExit(0).code)
+        self.assertEqual(err.getvalue(), "")
+        self.assertEqual(
+            out.getvalue(),
+            "Adding: load_data_parser ;\n"
+            "Adding: load_model_parser ;\n"
+            "Adding: train_parser ;\n"
+            "usage: python -m ml_params [-h] [--version] [--engine {tensorflow}]\n"
+            "                           {load_data,load_model,train} ...\n\n"
+            "Consistent CLI for every popular ML framework.\n\n"
+            "positional arguments:\n"
+            "  {load_data,load_model,train}\n"
+            "                        subcommand to run. Hacked to be chainable.\n\n"
+            "optional arguments:\n"
+            "  -h, --help            show this help message and exit\n"
+            "  --version             show program's version number and exit\n"
+            "  --engine {tensorflow}\n"
+            '                        ML engine, e.g., "TensorFlow", "JAX", "pytorch"\n',
+        )
+
+        del environ["ML_PARAMS_ENGINE"]
+        environ.update(env_backup)
 
     def test_version(self) -> None:
         """ Tests that main will give you the right version """
@@ -98,6 +129,17 @@ class TestMain(TestCase):
     def test__build_parser(self) -> None:
         """ Basic test for `_build_parser` """
         self.assertIsInstance(_build_parser(), ImportArgumentParser)
+
+    def test_string_types(self) -> None:
+        """ Test `string_types` values """
+        with patch("sys.version", "3"):
+            import ml_params.__main__
+
+            self.assertTupleEqual(ml_params.__main__.string_types, (str,))
+        with patch("sys.version", "2"):
+            import ml_params.__main__
+
+            self.assertTupleEqual(ml_params.__main__.string_types, (str,))
 
     def test_get_one_arg(self) -> None:
         """ Basic tests for `get_one_arg` """

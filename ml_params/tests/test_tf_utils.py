@@ -1,7 +1,6 @@
 """
 Tests for tf_utils
 """
-import sys
 from unittest import TestCase
 from unittest.mock import patch, MagicMock, call
 
@@ -17,8 +16,7 @@ class TestTfUtils(TestCase):
         """
         Tests whether `get_from_tensorflow_datasets` calls the right function
         """
-        if "tensorflow_datasets" not in sys.modules:
-            sys.modules["tensorflow_datasets"] = MagicMock()
+        # if "tensorflow_datasets" not in sys.modules: sys.modules["tensorflow_datasets"] = MagicMock()
         with patch(
             "ml_params.tf_utils.common_dataset_handler", new_callable=MagicMock
         ) as common_dataset_handler, patch(
