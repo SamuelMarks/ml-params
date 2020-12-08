@@ -13,9 +13,10 @@ from operator import itemgetter
 from os import environ
 
 from argparse_utils.actions.enum import EnumAction
+from pkg_resources import working_set
+
 from ml_params import __version__
 from ml_params.base import BaseTrainer
-from pkg_resources import working_set
 
 if sys.version[0] == "3":
     string_types = (str,)
@@ -81,14 +82,14 @@ def _build_parser():
     return parser
 
 
-def get_one_arg(args, argv=None):
+def get_one_arg(args, argv=sys.argv[1:]):
     """
     Hacked together parser to get just one value
 
     :param args: Name of arg to retrieve. If multiple specified, return first found.
     :type args: ```Tuple[str]```
 
-    :param argv: Defaults to `sys.argv`
+    :param argv: Defaults to `sys.argv[1:]`
     :type argv: ```Optional[List[str]]```
 
     :return: First matching arg value
@@ -98,7 +99,7 @@ def get_one_arg(args, argv=None):
         type(args)
     )
     next_is_sym = None
-    for e in argv or sys.argv[1:]:
+    for e in argv:
         for eng in args:
             if e.startswith(eng):
                 if e == eng:
@@ -109,8 +110,13 @@ def get_one_arg(args, argv=None):
                 return e
 
 
-def main():
-    """ Main CLI. Actually perform the argument parsing &etc. """
+def main(argv=None):
+    """
+    Main CLI. Actually perform the argument parsing &etc.
+
+    :param argv: argv, defaults to ```sys.argv```
+    :type argv: ```Optional[List[str]]```
+    """
     engine_name = engine = get_one_arg(("-e", "--engine")) or environ.get(
         "ML_PARAMS_ENGINE"
     )
@@ -122,12 +128,14 @@ def main():
             )
         )
 
+    argv = argv or sys.argv[1:]
     _parser = _build_parser()
 
-    if "--version" in sys.argv[1:]:
+    if "--version" in argv:
         _parser.parse_args(["--version"])
     elif isinstance(engine, (type(None), string_types)):
-        _parser.print_help()
+        _parser.print_help(file=sys.stderr)
+        print("engine:", engine, ";")
         _parser.error(
             "--engine must be provided, and from installed ml-params-* options"
         )
@@ -209,7 +217,7 @@ def main():
     )
 
     # Parse the CLI input continuously—i.e., for each subcommand—until completion. `trainer` holds/updates state.
-    rest = sys.argv[1:]
+    rest = argv[1:]
     while len(rest) != 0:
         args, rest = _parser.parse_known_args(rest)
         print(args)

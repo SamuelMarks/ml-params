@@ -5,7 +5,7 @@ from io import StringIO
 from unittest import TestCase
 from unittest.mock import patch, MagicMock
 
-from ml_params.tests.utils_for_tests import unittest_main
+from ml_params.tests.utils_for_tests import unittest_main, rpartial
 
 
 class TestUtilsForTests(TestCase):
@@ -30,6 +30,11 @@ class TestUtilsForTests(TestCase):
         self.assertIsInstance(e.exception.code, bool)
         self.assertIsNone(argparse_mock.call_args)
         self.assertIsNone(ml_params.tests.utils_for_tests.unittest_main())
+
+    def test_rpartial(self) -> None:
+        """ Test that rpartial works as advertised """
+        self.assertTrue(rpartial(isinstance, str)(""))
+        self.assertFalse(rpartial(isinstance, str)(0))
 
 
 unittest_main()

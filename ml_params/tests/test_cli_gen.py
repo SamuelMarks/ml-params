@@ -2,17 +2,18 @@
 Tests for the __main__ script
 """
 
-from argparse import ArgumentError
+import sys
 from io import StringIO
-from sys import version_info
-from unittest import TestCase, skip, skipIf
+from unittest import TestCase, skipIf
 from unittest.mock import MagicMock, patch
 
+import ml_params
 from ml_params.__main__ import (
     run_main,
     _build_parser,
     ImportArgumentParser,
     get_one_arg,
+    main,
 )
 from ml_params.tests.utils_for_tests import unittest_main
 
@@ -39,29 +40,61 @@ class TestMain(TestCase):
             run_main()
             self.assertEqual(g.call_count, 1)
 
-    @skip
     def test_main(self) -> None:
         """ Tests that main will be called """
 
-        self.assertRaises(
-            ArgumentError,
-            lambda: str(  # ml_params_tensorflow.ml_params.doctrans_cli_gen.main(
-                ["python", "bar", "foo"]
-            ),
+        with self.assertRaises(SystemExit) as e, patch(
+            "sys.stdout", new_callable=StringIO
+        ) as out, patch("sys.stderr", new_callable=StringIO) as err:
+            self.assertIsNone(main())
+
+        help_text, usage, engine_help_text = err.getvalue().rpartition("usage")
+        engine_help_text = usage + engine_help_text
+        self.assertEqual(
+            engine_help_text,
+            "usage: python -m ml_params [-h] [--version] [--engine {}]\n"
+            "python -m ml_params: error: --engine must be provided,"
+            " and from installed ml-params-* options\n",
         )
-        with self.assertRaises(SystemExit), patch("sys.stdout", new_callable=StringIO):
-            self.assertIsNone(
-                None  # ml_params_tensorflow.ml_params.doctrans_cli_gen.main(["bar", "-h"])
-            )
+        self.assertEqual(
+            help_text,
+            "usage: python -m ml_params [-h] [--version] [--engine {}]\n\n"
+            "Consistent CLI for every popular ML framework.\n\n"
+            "optional arguments:\n"
+            "  -h, --help   show this help message and exit\n"
+            "  --version    show program's version number and exit\n"
+            '  --engine {}  ML engine, e.g., "TensorFlow", "JAX", "pytorch"\n',
+        )
+        self.assertEqual(e.exception.code, SystemExit(2).code)
 
-        with patch("sys.stdout", new_callable=StringIO) as f:
-            self.assertIsNone(
-                None  # ml_params_tensorflow.ml_params.doctrans_cli_gen.main(["bar", "howzat"])
-            )
-            for attr in dir(f):
-                print(attr, getattr(f, attr))
+        help_text = out.getvalue()
 
-    @skipIf(version_info[:2] == (3, 5), "Enums are broken in 3.5?")
+        # With engine set
+        mod = "ml-params-tensorflow"
+        if mod not in sys.modules:
+            sys.modules[mod] = ml_params  # TODO: Some fake test module
+
+        with self.assertRaises(SystemExit), patch(
+            "sys.stdout", new_callable=StringIO
+        ) as out, patch("sys.stderr", new_callable=StringIO) as err:
+            self.assertIsNone(main(["--engine", "tensorflow", "-h"]))
+        self.assertEqual(help_text, out.getvalue())
+        # TODO: Get SystemExit(0)
+        self.assertEqual(e.exception.code, SystemExit(2).code)
+
+    def test_version(self) -> None:
+        """ Tests that main will give you the right version """
+
+        with self.assertRaises(SystemExit) as e, patch(
+            "sys.stdout", new_callable=StringIO
+        ) as out:
+            self.assertIsNone(main(["--version"]))
+        self.assertEqual(
+            out.getvalue(), "python -m ml_params {}\n".format(ml_params.__version__)
+        )
+        self.assertEqual(e.exception.code, SystemExit(0).code)
+
+    @skipIf(sys.version_info[:2] == (3, 5), "Enums are broken in 3.5?")
     def test__build_parser(self) -> None:
         """ Basic test for `_build_parser` """
         self.assertIsInstance(_build_parser(), ImportArgumentParser)
