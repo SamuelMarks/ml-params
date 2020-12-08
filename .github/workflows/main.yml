@@ -38,7 +38,7 @@ jobs:
                 run: |
                     pip install https://github.com/SamuelMarks/ml-params-tensorflow/archive/master.zip#egg=ml-params-tensorflow
                     pip install -r https://raw.githubusercontent.com/SamuelMarks/ml-params-tensorflow/master/requirements.txt
-                if: matrix.python-version < '3.9'
+                if: matrix.python-version == '3.5' || matrix.python-version == '3.6'  || matrix.python-version == '3.7' || matrix.python-version == '3.8'
             -   name: Test with unittest
                 run: |
                     python setup.py test
