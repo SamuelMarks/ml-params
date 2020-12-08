@@ -18,7 +18,7 @@ class TestBaseTrainer(TestCase):
         Tests whether `BaseTrainer` has the right properties
         """
         self.assertListEqual(
-            list(to_d(BaseTrainer).keys()),
+            sorted(to_d(BaseTrainer).keys()),
             [
                 "data",
                 "load_data",

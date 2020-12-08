@@ -1,6 +1,7 @@
 """
 Collection of utility functions
 """
+from inspect import getmembers
 
 
 def camel_case(st, upper=False):
@@ -142,7 +143,9 @@ def to_d(obj):
     return (
         obj
         if isinstance(obj, dict)
-        else {attr: getattr(obj, attr) for attr in dir(obj) if not attr.startswith("_")}
+        else dict(
+            filter(lambda key_inst: not key_inst[0].startswith("_"), getmembers(obj))
+        )
     )
 
 

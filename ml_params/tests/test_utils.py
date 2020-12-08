@@ -3,9 +3,9 @@ Tests for utils
 """
 from unittest import TestCase
 
+import ml_params.utils
 from ml_params.tests.utils_for_tests import unittest_main
 from ml_params.utils import camel_case, to_d
-import ml_params.utils
 
 
 class TestUtils(TestCase):
@@ -29,7 +29,8 @@ class TestUtils(TestCase):
         """
         self.assertDictEqual(to_d({}), {})
         self.assertListEqual(
-            list(to_d(ml_params.utils).keys()), ml_params.utils.__all__
+            list(to_d(ml_params.utils).keys()),
+            sorted(ml_params.utils.__all__ + ["getmembers"]),
         )
 
 

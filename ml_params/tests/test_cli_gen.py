@@ -2,18 +2,18 @@
 Tests for the __main__ script
 """
 
-from unittest import TestCase, skip
-from unittest.mock import MagicMock, patch
 from argparse import ArgumentError
 from io import StringIO
+from unittest import TestCase, skip
+from unittest.mock import MagicMock, patch
 
-from ml_params.tests.utils_for_tests import unittest_main
 from ml_params.__main__ import (
     run_main,
     _build_parser,
     ImportArgumentParser,
     get_one_arg,
 )
+from ml_params.tests.utils_for_tests import unittest_main
 
 
 class TestMain(TestCase):
