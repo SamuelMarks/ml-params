@@ -11,7 +11,7 @@ jobs:
         runs-on: ${{ matrix.os.runs-on }}
         strategy:
             matrix:
-                python-version: [3.5, 3.6, 3.7, 3.8]
+                python-version: [3.5, 3.6, 3.7, 3.8, 3.9, '3.10.0-alpha - 3.10.0']
                 os:
                     -   name: Linux
                         runs-on: ubuntu-latest
@@ -34,8 +34,11 @@ jobs:
                     python -m pip install --upgrade pip
                     python -m pip install --upgrade setuptools wheel
                     pip install -r requirements.txt
+            -   name: install_extra_dependencies
+                run: |
                     pip install https://github.com/SamuelMarks/ml-params-tensorflow/archive/master.zip#egg=ml-params-tensorflow
                     pip install -r https://raw.githubusercontent.com/SamuelMarks/ml-params-tensorflow/master/requirements.txt
+                if: matrix.python-version < '3.9'
             -   name: Test with unittest
                 run: |
                     python setup.py test

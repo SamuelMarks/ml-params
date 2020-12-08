@@ -1,8 +1,10 @@
 """
 Shared utility functions used by tests
 """
-
+from sys import version_info
 from unittest import main
+
+TF_SUPPORTED = (3, 8) >= version_info[:2] > (3, 5)
 
 
 def unittest_main():

@@ -1,10 +1,10 @@
 """
 Tests for tf_utils
 """
-from unittest import TestCase
+from unittest import TestCase, skipIf
 from unittest.mock import patch, MagicMock, call
 
-from ml_params.tests.utils_for_tests import unittest_main
+from ml_params.tests.utils_for_tests import unittest_main, TF_SUPPORTED
 
 
 class TestTfUtils(TestCase):
@@ -12,6 +12,7 @@ class TestTfUtils(TestCase):
     Tests whether tf_utils work
     """
 
+    @skipIf(not TF_SUPPORTED, "TensorFlow isn't supported on this Python version")
     def test_get_from_tensorflow_datasets(self) -> None:
         """
         Tests whether `get_from_tensorflow_datasets` calls the right function

@@ -16,7 +16,7 @@ from ml_params.__main__ import (
     get_one_arg,
     main,
 )
-from ml_params.tests.utils_for_tests import unittest_main
+from ml_params.tests.utils_for_tests import unittest_main, TF_SUPPORTED
 
 
 class TestMain(TestCase):
@@ -54,21 +54,26 @@ class TestMain(TestCase):
 
         help_text, _usage, engine_help_text = err.getvalue().rpartition("usage")
         engine_help_text = _usage + engine_help_text
+        engines = "{tensorflow}" if TF_SUPPORTED else "{}"
         self.assertEqual(
             engine_help_text,
-            "usage: python -m ml_params [-h] [--version] [--engine {tensorflow}]\n"
+            "usage: python -m ml_params [-h] [--version] [--engine {engines}]\n"
             "python -m ml_params: error: --engine must be provided,"
-            " and from installed ml-params-* options\n",
+            " and from installed ml-params-* options\n".format(engines=engines),
         )
         self.assertEqual(
-            help_text,
-            "usage: python -m ml_params [-h] [--version] [--engine {tensorflow}]\n\n"
+            help_text.replace(" ", ""),
+            "usage: python -m ml_params [-h] [--version] [--engine {engines}]\n\n"
             "Consistent CLI for every popular ML framework.\n\n"
             "optional arguments:\n"
             "  -h, --help            show this help message and exit\n"
             "  --version             show program's version number and exit\n"
-            "  --engine {tensorflow}\n"
-            '                        ML engine, e.g., "TensorFlow", "JAX", "pytorch"\n',
+            "  --engine {engines}"
+            '                        ML engine, e.g., "TensorFlow", "JAX", "pytorch"\n'.format(
+                engines=engines
+            ).replace(
+                " ", ""
+            ),
         )
         self.assertEqual(e.exception.code, SystemExit(2).code)
 
@@ -78,6 +83,9 @@ class TestMain(TestCase):
         mod = "ml-params-tensorflow"
         if mod not in sys.modules:
             sys.modules[mod] = ml_params  # TODO: Some fake test module
+
+        if not TF_SUPPORTED:
+            return
 
         env_backup = dict(environ.items())
         environ["ML_PARAMS_ENGINE"] = "tensorflow"
