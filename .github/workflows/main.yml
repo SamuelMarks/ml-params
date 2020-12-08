@@ -1,4 +1,4 @@
-name: Linting
+name: Linting, testing, and coverage
 
 on:
   push:
@@ -6,12 +6,22 @@ on:
     - 'master'
 
 jobs:
-    lint_and_coverage:
-        name: Linting
-        runs-on: ubuntu-latest
+    test:
+        name: ${{ matrix.os.name }} ${{ matrix.python-version }}
+        runs-on: ${{ matrix.os.runs-on }}
         strategy:
             matrix:
-                python-version: [3.5, 3.6, 3.7, 3.8, 3.9]
+                python-version: [3.5, 3.6, 3.7, 3.8, 3.9, '3.10.0-alpha - 3.10.0']
+                os:
+                    -   name: Linux
+                        runs-on: ubuntu-latest
+                        python_platform: linux
+                    -   name: Windows
+                        runs-on: windows-latest
+                        python_platform: win32
+                    -   name: macOS
+                        runs-on: macos-latest
+                        python_platform: darwin
         steps:
             -   uses: actions/checkout@v2
             -   name: Set up Python ${{ matrix.python-version }}
@@ -24,13 +34,19 @@ jobs:
                     python -m pip install --upgrade pip
                     python -m pip install --upgrade setuptools wheel
                     pip install -r requirements.txt
+                    python --version | grep -qF '3.9.' && sed -i '/astor/d' requirements.txt || true
+            -   name: Test with unittest
+                run: |
+                    python setup.py test
+
             -   name: Lint with flake8
                 run: |
                     pip install flake8
-                    flake8 . --count --select=$(printf '%s,' {A..Z}) --ignore='W503,E203' --show-source --max-complexity=10 --max-line-length=119 --statistics
+                    flake8 . --count --select=$(printf '%s,' {A..Z}) --ignore='W503,E203' --show-source --max-complexity=13 --max-line-length=119 --exclude 'ml_params_tensorflow/ml_params/losses.py,ml_params_tensorflow/ml_params/metrics.py' --statistics
+                if: matrix.python-version == '3.8' && matrix.os.name == 'Linux'
             -   name: Doc coverage
                 run: |
-                    pip install interrogate
+                    pip install interrogate codecov coverage
                     interrogate --generate-badge '.github/doccoverage.svg'
                     sed -i 's/>interrogate</>doc coverage</g; s/.0%/%/g' .github/doccoverage.svg
                     grep -qF '100%' .github/doccoverage.svg && sed -i 's/370/300/g' .github/doccoverage.svg
@@ -46,4 +62,11 @@ jobs:
                         git commit -m '[.github/doccoverage.svg] Updated coverage'
                         git push origin master
                     fi
-                if: matrix.python-version == '3.8'
+                if: matrix.python-version == '3.8' && matrix.os.name == 'Linux'
+            -   name: Test coverage
+                run: |
+                    coverage run -m unittest discover
+                    bash <(curl -s https://codecov.io/bash)
+                env:
+                    CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+                if: matrix.python-version == '3.8' && matrix.os.name == 'Linux'

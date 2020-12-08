@@ -1,11 +1,13 @@
 ml_params
 =========
-![Python version range](https://img.shields.io/badge/python-3.5%20|%203.6%20|%203.7%20|%203.8%20|%203.9-blue.svg)
+![Python version range](https://img.shields.io/badge/python-3.5%20|%203.6%20|%203.7%20|%203.8%20|%203.9%20|%203.10a2-blue.svg)
+![Python implementation](https://img.shields.io/badge/implementation-cpython-blue.svg)
 [![License](https://img.shields.io/badge/license-Apache--2.0%20OR%20MIT-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Linting, testing, and coverage](https://github.com/SamuelMarks/ml-params/workflows/Linting/badge.svg)](https://github.com/SamuelMarks/ml-params/actions)
+[![Linting, testing, and coverage](https://github.com/SamuelMarks/ml-params/workflows/Linting,%20testing,%20and%20coverage/badge.svg)](https://github.com/SamuelMarks/ml-params/actions)
 ![Tested OSs, others may work](https://img.shields.io/badge/Tested%20on-Linux%20|%20macOS%20|%20Windows-green)
 ![Documentation coverage](.github/doccoverage.svg)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![codecov](https://codecov.io/gh/SamuelMarks/ml-params/branch/master/graph/badge.svg)](https://codecov.io/gh/SamuelMarks/ml-params)
+[![black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 Consistent CLI and Python SDK API for †every popular ML framework.
 
