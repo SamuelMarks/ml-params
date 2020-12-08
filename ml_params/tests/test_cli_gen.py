@@ -4,7 +4,8 @@ Tests for the __main__ script
 
 from argparse import ArgumentError
 from io import StringIO
-from unittest import TestCase, skip
+from sys import version_info
+from unittest import TestCase, skip, skipIf
 from unittest.mock import MagicMock, patch
 
 from ml_params.__main__ import (
@@ -60,6 +61,7 @@ class TestMain(TestCase):
             for attr in dir(f):
                 print(attr, getattr(f, attr))
 
+    @skipIf(version_info[:2] == (3, 5), "Enums are broken in 3.5?")
     def test__build_parser(self) -> None:
         """ Basic test for `_build_parser` """
         self.assertIsInstance(_build_parser(), ImportArgumentParser)
