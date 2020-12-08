@@ -29,8 +29,13 @@ class TestUtils(TestCase):
         """
         self.assertDictEqual(to_d({}), {})
         self.assertListEqual(
-            list(to_d(ml_params.utils).keys()),
-            sorted(ml_params.utils.__all__ + ["getmembers"]),
+            *map(
+                sorted,
+                (
+                    to_d(ml_params.utils).keys(),
+                    (ml_params.utils.__all__ + ["getmembers"]),
+                ),
+            )
         )
 
 
