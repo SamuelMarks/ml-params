@@ -3,7 +3,7 @@ Tests for base class
 """
 from inspect import getmembers
 from operator import itemgetter
-from unittest import TestCase, skip
+from unittest import TestCase
 from unittest.mock import patch, MagicMock
 
 from ml_params.base import BaseTrainer
@@ -16,17 +16,17 @@ class TestBaseTrainer(TestCase):
     Tests for `BaseTrainer`
     """
 
-    @skip("No clue how to write this test")
-    def test_no_custom_modules(self):
-        """
-        Tests when modules are missing
-        """
-
-        # with patch.dict(sys.modules, {"os": None}), patch("sys.path", []):
-        #     import ml_params.base
-        #
-        #     self.assertIsNone(ml_params.base.np)
-        #     self.assertIsNone(ml_params.base.tf)
+    # @skip("No clue how to write this test")
+    # def test_no_custom_modules(self):
+    #     """
+    #     Tests when modules are missing
+    #     """
+    #
+    #     with patch.dict(sys.modules, {"os": None}), patch("sys.path", []):
+    #         import ml_params.base
+    #
+    #         self.assertIsNone(ml_params.base.np)
+    #         self.assertIsNone(ml_params.base.tf)
 
     def test_properties(self) -> None:
         """

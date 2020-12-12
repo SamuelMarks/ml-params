@@ -4,7 +4,8 @@ Tests for the __main__ script
 
 import sys
 from io import StringIO
-from os import environ
+from itertools import chain
+from os import environ, path
 from unittest import TestCase, skipIf
 from unittest.mock import MagicMock, patch
 
@@ -62,16 +63,23 @@ class TestMain(TestCase):
             " and from installed ml-params-* options\n".format(engines=engines),
         )
         self.assertEqual(
-            help_text.replace(" ", "").replace("\n", ""),
-            "usage: python -m ml_params [-h] [--version] [--engine {engines}]\n\n"
-            "Consistent CLI for every popular ML framework.\n\n"
-            "optional arguments:\n"
-            "  -h, --help            show this help message and exit\n"
-            "  --version             show program's version number and exit\n"
-            "  --engine {engines}"
-            '                        ML engine, e.g., "TensorFlow", "JAX", "pytorch"\n'.format(
-                engines=engines
-            ).replace(" ", "").replace("\n", ""),
+            *map(
+                lambda s: s.replace(" ", "").replace("\n", ""),
+                (
+                    (
+                        help_text,
+                        "usage: python -m ml_params [-h] [--version] [--engine {engines}]\n\n"
+                        "Consistent CLI for every popular ML framework.\n\n"
+                        "optional arguments:\n"
+                        "  -h, --help            show this help message and exit\n"
+                        "  --version             show program's version number and exit\n"
+                        "  --engine {engines}"
+                        '                        ML engine, e.g., "TensorFlow", "JAX", "pytorch"\n'.format(
+                            engines=engines
+                        ),
+                    )
+                ),
+            )
         )
         self.assertEqual(e.exception.code, SystemExit(2).code)
 
@@ -100,9 +108,9 @@ class TestMain(TestCase):
         self.assertEqual(err.getvalue(), "")
         self.assertEqual(
             out.getvalue(),
-            "Adding: load_data_parser ;\n"
-            "Adding: load_model_parser ;\n"
-            "Adding: train_parser ;\n"
+            "Adding CLI parser: load_data_parser ;\n"
+            "Adding CLI parser: load_model_parser ;\n"
+            "Adding CLI parser: train_parser ;\n"
             "usage: python -m ml_params [-h] [--version] [--engine {tensorflow}]\n"
             "                           {load_data,load_model,train} ...\n\n"
             "Consistent CLI for every popular ML framework.\n\n"
@@ -118,6 +126,48 @@ class TestMain(TestCase):
 
         del environ["ML_PARAMS_ENGINE"]
         environ.update(env_backup)
+
+    def test_sub_arguments(self) -> None:
+        """
+        Tests that the special sub-params syntax works,
+        such that `--foo bar can haz` will construct a `bar` object with `can=haz` as argument"""
+        log_dir = path.dirname(__file__)
+        _argv = list(
+            chain.from_iterable(
+                (
+                    ("load_data", "--dataset_name", "cifar10"),
+                    ("load_model", "--model", "MobileNet"),
+                    (
+                        "train",
+                        "--callbacks",
+                        "TensorBoard: log_dir: {!r}".format(log_dir),
+                        "--loss",
+                        "BinaryCrossentropy",
+                        "--optimizer",
+                        "Adam",
+                        "--epochs",
+                        "3",
+                    ),
+                )
+            )
+        )
+        # patch("sys.stdout", new_callable=StringIO) as out
+        # patch("sys.stderr", new_callable=StringIO) as err
+        with self.assertRaises(SystemExit) as e, patch(
+            "ml_params.__main__.environ", {"ML_PARAMS_ENGINE": "tensorflow"}
+        ):
+            self.assertIsNone(main(_argv))
+            """
+            try:
+                self.assertIsNone(main(_argv))
+            except:
+                print(err.getvalue(), file=sys.stderr)
+                print(out.getvalue(), file=sys.stdout)
+                raise
+            """
+
+        # self.assertEqual(err.getvalue(), "")
+        self.assertEqual(e.exception.code, SystemExit(0).code)
 
     def test_version(self) -> None:
         """ Tests that main will give you the right version """

@@ -2,11 +2,16 @@
 """
 CLI interface
 """
-import os
 import sys
-from argparse import ArgumentParser, SUPPRESS
+from argparse import (
+    ArgumentParser,
+    SUPPRESS,
+    ArgumentError,
+    HelpFormatter,
+)
 from collections import deque
 from enum import Enum
+from functools import partial
 from importlib import import_module
 from itertools import filterfalse
 from operator import itemgetter
@@ -14,6 +19,7 @@ from os import environ
 
 from argparse_utils.actions.enum import EnumAction
 from pkg_resources import working_set
+from yaml import safe_load as loads
 
 from ml_params import __version__
 from ml_params.base import BaseTrainer
@@ -37,36 +43,80 @@ engine_enum = tuple(
 )
 
 
+def parse_from_symbol_table(value, dest, symbol_table):
+    print("parse_from_symbol_table::value:", value, ';')
+    if dest in symbol_table and isinstance(value, str):
+        name, _, raw = value.partition(":")
+        config_name = "{name}Config".format(name=name)
+        if _ and raw and config_name in symbol_table[dest].__all__:
+            return getattr(symbol_table[dest], config_name), raw
+
+    return None, None
+
+
 class ImportArgumentParser(ArgumentParser):
     """ Attempt at creating an importing argument parser """
 
-    def convert_arg_line_to_args(self, arg_line):
-        """Convert the arg line to args, here just experimenting to logfile
-
-        :param arg_line: The argument line
-        :type arg_line: ```str```
-
-        :return: The argument line
-        :rtype: ```str```
-        """
-        with open(os.path.join(os.getcwd(), "log.txt"), "wt") as f:
-            f.write("arg_line: {!r} ;".format(arg_line))
-        return super(ImportArgumentParser, self).convert_arg_line_to_args(
-            arg_line=arg_line
+    def __init__(
+        self,
+        symbol_table,
+        prog=None,
+        usage=None,
+        description=None,
+        epilog=None,
+        parents=None,
+        formatter_class=HelpFormatter,
+        prefix_chars="-",
+        fromfile_prefix_chars=None,
+        argument_default=None,
+        conflict_handler="error",
+        add_help=True,
+        allow_abbrev=True,
+    ):
+        super(ImportArgumentParser, self).__init__(
+            prog=prog,
+            usage=usage,
+            description=description,
+            epilog=epilog,
+            parents=parents or [],
+            formatter_class=formatter_class,
+            prefix_chars=prefix_chars,
+            fromfile_prefix_chars=fromfile_prefix_chars,
+            argument_default=argument_default,
+            conflict_handler=conflict_handler,
+            add_help=add_help,
+            allow_abbrev=allow_abbrev,
         )
+        self.symbol_table = symbol_table
+
+    def _check_value(self, action, value):
+        # converted value must be one of the choices (if specified)
+        if isinstance(value, str) and value.startswith("TensorBoard"):
+            print("_check_value::value:", value, ";")
+
+        def raise_f(*args, **kwargs):
+            raise AssertionError("WOW")
+
+        if action.choices is not None and value not in action.choices:
+            if parse_from_symbol_table(value, action.dest, symbol_table=self.symbol_table) == (None, None):
+                args = {"value": value, "choices": ", ".join(map(repr, action.choices))}
+                msg = "invalid choice: %(value)r (choose from %(choices)s)"
+                raise ArgumentError(action, msg % args)
+            else:
+                action.type = raise_f
 
 
-def _build_parser():
+def _build_parser(symbol_table=None):
     """
     Parser builder
 
     :return: instanceof ArgumentParser
     :rtype: ```ArgumentParser```
     """
-
     parser = ImportArgumentParser(
         prog="python -m ml_params",
         description="Consistent CLI for every popular ML framework.",
+        symbol_table=symbol_table,
     )
     parser.add_argument(
         "--version", action="version", version="%(prog)s {}".format(__version__)
@@ -82,15 +132,15 @@ def _build_parser():
     return parser
 
 
-def get_one_arg(args, argv=sys.argv[1:]):
+def get_one_arg(args, argv):
     """
     Hacked together parser to get just one value
 
     :param args: Name of arg to retrieve. If multiple specified, return first found.
     :type args: ```Tuple[str]```
 
-    :param argv: Defaults to `sys.argv[1:]`
-    :type argv: ```Optional[List[str]]```
+    :param argv: Argument list
+    :type argv: ```List[str]```
 
     :return: First matching arg value
     :rtype: ```Optional[str]```
@@ -117,7 +167,8 @@ def main(argv=None):
     :param argv: argv, defaults to ```sys.argv```
     :type argv: ```Optional[List[str]]```
     """
-    engine_name = engine = get_one_arg(("-e", "--engine")) or environ.get(
+    argv = argv or sys.argv[1:]
+    engine_name = engine = get_one_arg(("-e", "--engine"), argv) or environ.get(
         "ML_PARAMS_ENGINE"
     )
 
@@ -127,9 +178,20 @@ def main(argv=None):
                 engine_fqdn="ml_params_{engine_name}".format(engine_name=engine_name)
             )
         )
+        symbol_table = getattr(
+            import_module(
+                "{engine_fqdn}.ml_params.extra_symbols".format(
+                    engine_fqdn="ml_params_{engine_name}".format(
+                        engine_name=engine_name
+                    )
+                )
+            ),
+            "extra_symbols",
+        )
+    else:
+        symbol_table = None
 
-    argv = argv or sys.argv[1:]
-    _parser = _build_parser()
+    _parser = _build_parser(symbol_table=symbol_table)
 
     if "--version" in argv:
         _parser.parse_args(["--version"])
@@ -155,11 +217,22 @@ def main(argv=None):
         help="subcommand to run. Hacked to be chainable.", dest="command"
     )
 
+    def dbg(arg):
+        dbg.c += 1
+        if dbg.c < 10:
+            for attr in dir(arg):
+                print(attr, getattr(arg, attr))
+        return arg
+
+    dbg.c = 0
+
     deque(
         (
-            print("Adding:", func_name, ";")
+            print("Adding CLI parser: {!s} ;".format(func_name))
             or getattr(engine, func_name)(
-                subparsers.add_parser(func_name[: -len("_parser")])
+                subparsers.add_parser(
+                    func_name[: -len("_parser")], symbol_table=symbol_table
+                )
             )
             for func_name in sorted(engine.__all__)
             if func_name.endswith("_parser")
@@ -214,14 +287,95 @@ def main(argv=None):
         maxlen=0,
     )
 
+    _parse_from_symbol_table = partial(parse_from_symbol_table, symbol_table=symbol_table)
+    def change_type(sub_parser_action_idx, argument_parser_name, action_name):
+        """
+        Set the type to construct something from the symbol table
+
+        :param sub_parser_action_idx: index of sub_parser_action
+        :type sub_parser_action_idx: ```str```
+
+        :param argument_parser_name: name of argument_parser
+        :type argument_parser_name: ```str```
+
+        :param action_name: Name of action
+        :type action_name: ```str```
+        """
+        print("LONNNG:", _parser._subparsers._group_actions[sub_parser_action_idx].choices[
+            argument_parser_name
+        ]._option_string_actions[action_name], ';')
+        _parser._subparsers._group_actions[sub_parser_action_idx].choices[
+            argument_parser_name
+        ]._option_string_actions[action_name].type = partial(parse_type,
+            dest=_parser._subparsers._group_actions[sub_parser_action_idx].choices[
+            argument_parser_name
+        ]._option_string_actions[action_name].dest)
+
+    def parse_type(v, dest):
+        print("parse_type::v:", v, ';\nparse_type::dest:', dest, ';')
+        init, arguments = _parse_from_symbol_table(v, dest)
+        if init is not None and arguments is not None:
+            print("init:", init, ';\narguments:', arguments, "\nloads(arguments):", loads(arguments), ';\n')
+            __args = loads(arguments)
+            print('want to return:', init(**__args), ';')
+        return v
+
+
+    # When the symbol_table contains the target (dest) CLI parameter,
+    # change its type so that it'll parse out and construct the right [configuration] object
+    deque(
+        map(
+            lambda idx_sub_parser_action: deque(
+                map(
+                    lambda name_argument_parser: deque(
+                        map(
+                            lambda idx_name: change_type(
+                                sub_parser_action_idx=idx_sub_parser_action[0],
+                                argument_parser_name=name_argument_parser[0],
+                                action_name=idx_name[1],
+                            ),
+                            filter(
+                                lambda idx_name: name_argument_parser[1]
+                                ._option_string_actions[idx_name[1]]
+                                .dest
+                                in symbol_table
+                                and name_argument_parser[1]
+                                ._option_string_actions[idx_name[1]]
+                                .type
+                                in frozenset((None, str)),
+                                enumerate(
+                                    name_argument_parser[1]._option_string_actions
+                                ),
+                            ),
+                        ),
+                        maxlen=0,
+                    ),
+                    idx_sub_parser_action[1].choices.items(),
+                ),
+                maxlen=0,
+            ),
+            enumerate(_parser._subparsers._group_actions),
+        ),
+        maxlen=0,
+    )
+
     # Parse the CLI input continuously—i.e., for each subcommand—until completion. `trainer` holds/updates state.
     rest = argv
+    _parser.symbol_table = symbol_table
     while len(rest) != 0:
         args, rest = _parser.parse_known_args(rest)
-        print(args)
+        # print("__main__::args:", args, ";\n__main__::rest:", rest, ";")
 
         # if args.command == 'train':
         #    exit(5)
+
+        try:
+            #assert not isinstance(
+            #    args.callbacks[0], str
+            #), "Expected non-str, got: {!r}".format(args.callbacks[0])
+            print("args.callbacks[0]:", args.callbacks[0], ';')
+        except AttributeError:
+            pass
 
         getattr(trainer, args.command)(
             **{
