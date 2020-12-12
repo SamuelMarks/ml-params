@@ -11,13 +11,13 @@ from unittest.mock import MagicMock, patch
 
 import ml_params
 from ml_params.__main__ import (
-    run_main,
-    _build_parser,
     ImportArgumentParser,
+    _build_parser,
     get_one_arg,
     main,
+    run_main,
 )
-from ml_params.tests.utils_for_tests import unittest_main, TF_SUPPORTED
+from ml_params.tests.utils_for_tests import TF_SUPPORTED, unittest_main
 
 
 class TestMain(TestCase):

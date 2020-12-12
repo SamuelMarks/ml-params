@@ -3,12 +3,7 @@
 CLI interface
 """
 import sys
-from argparse import (
-    ArgumentParser,
-    SUPPRESS,
-    ArgumentError,
-    HelpFormatter,
-)
+from argparse import SUPPRESS, ArgumentParser, HelpFormatter
 from collections import deque
 from enum import Enum
 from functools import partial
@@ -44,7 +39,6 @@ engine_enum = tuple(
 
 
 def parse_from_symbol_table(value, dest, symbol_table):
-    print("parse_from_symbol_table::value:", value, ';')
     if dest in symbol_table and isinstance(value, str):
         name, _, raw = value.partition(":")
         config_name = "{name}Config".format(name=name)
@@ -90,20 +84,15 @@ class ImportArgumentParser(ArgumentParser):
         self.symbol_table = symbol_table
 
     def _check_value(self, action, value):
-        # converted value must be one of the choices (if specified)
-        if isinstance(value, str) and value.startswith("TensorBoard"):
-            print("_check_value::value:", value, ";")
-
-        def raise_f(*args, **kwargs):
-            raise AssertionError("WOW")
-
-        if action.choices is not None and value not in action.choices:
-            if parse_from_symbol_table(value, action.dest, symbol_table=self.symbol_table) == (None, None):
-                args = {"value": value, "choices": ", ".join(map(repr, action.choices))}
-                msg = "invalid choice: %(value)r (choose from %(choices)s)"
-                raise ArgumentError(action, msg % args)
-            else:
-                action.type = raise_f
+        """ Check the value, parsing out the config class name if that object is provided """
+        super(ImportArgumentParser, self)._check_value(
+            action,
+            value.__class__.__name__[: -len("Config")]
+            if action.choices is not None
+            and value not in action.choices
+            and not isinstance(value, (str, int, float, complex, list, tuple, set))
+            else value,
+        )
 
 
 def _build_parser(symbol_table=None):
@@ -287,7 +276,10 @@ def main(argv=None):
         maxlen=0,
     )
 
-    _parse_from_symbol_table = partial(parse_from_symbol_table, symbol_table=symbol_table)
+    _parse_from_symbol_table = partial(
+        parse_from_symbol_table, symbol_table=symbol_table
+    )
+
     def change_type(sub_parser_action_idx, argument_parser_name, action_name):
         """
         Set the type to construct something from the symbol table
@@ -301,25 +293,22 @@ def main(argv=None):
         :param action_name: Name of action
         :type action_name: ```str```
         """
-        print("LONNNG:", _parser._subparsers._group_actions[sub_parser_action_idx].choices[
-            argument_parser_name
-        ]._option_string_actions[action_name], ';')
         _parser._subparsers._group_actions[sub_parser_action_idx].choices[
             argument_parser_name
-        ]._option_string_actions[action_name].type = partial(parse_type,
-            dest=_parser._subparsers._group_actions[sub_parser_action_idx].choices[
-            argument_parser_name
-        ]._option_string_actions[action_name].dest)
+        ]._option_string_actions[action_name].type = partial(
+            parse_type,
+            dest=_parser._subparsers._group_actions[sub_parser_action_idx]
+            .choices[argument_parser_name]
+            ._option_string_actions[action_name]
+            .dest,
+        )
 
     def parse_type(v, dest):
-        print("parse_type::v:", v, ';\nparse_type::dest:', dest, ';')
         init, arguments = _parse_from_symbol_table(v, dest)
         if init is not None and arguments is not None:
-            print("init:", init, ';\narguments:', arguments, "\nloads(arguments):", loads(arguments), ';\n')
             __args = loads(arguments)
-            print('want to return:', init(**__args), ';')
+            return init(**__args)
         return v
-
 
     # When the symbol_table contains the target (dest) CLI parameter,
     # change its type so that it'll parse out and construct the right [configuration] object
@@ -368,14 +357,6 @@ def main(argv=None):
 
         # if args.command == 'train':
         #    exit(5)
-
-        try:
-            #assert not isinstance(
-            #    args.callbacks[0], str
-            #), "Expected non-str, got: {!r}".format(args.callbacks[0])
-            print("args.callbacks[0]:", args.callbacks[0], ';')
-        except AttributeError:
-            pass
 
         getattr(trainer, args.command)(
             **{

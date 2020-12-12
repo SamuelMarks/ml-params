@@ -5,10 +5,10 @@ from abc import ABC, abstractmethod
 from functools import partial
 from itertools import chain
 from sys import stdout
-from typing import Tuple, Any, List, Union, Optional
+from typing import Any, List, Optional, Tuple, Union
 
 from ml_params.datasets import load_data_from_tfds_or_ml_prepare
-from ml_params.utils import to_numpy, to_d
+from ml_params.utils import to_d, to_numpy
 
 try:
     import numpy as np

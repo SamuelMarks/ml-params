@@ -2,9 +2,9 @@
 Tests for tf_utils
 """
 from unittest import TestCase, skipIf
-from unittest.mock import patch, MagicMock, call
+from unittest.mock import MagicMock, call, patch
 
-from ml_params.tests.utils_for_tests import unittest_main, TF_SUPPORTED
+from ml_params.tests.utils_for_tests import TF_SUPPORTED, unittest_main
 
 
 class TestTfUtils(TestCase):

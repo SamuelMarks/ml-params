@@ -4,7 +4,7 @@ Tests for base class
 from inspect import getmembers
 from operator import itemgetter
 from unittest import TestCase
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 from ml_params.base import BaseTrainer
 from ml_params.tests.utils_for_tests import unittest_main
