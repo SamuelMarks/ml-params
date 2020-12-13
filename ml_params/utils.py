@@ -2,6 +2,7 @@
 Collection of utility functions
 """
 from inspect import getmembers
+from sys import version_info
 
 
 def camel_case(st, upper=False):
@@ -159,4 +160,88 @@ def to_d(obj):
     )
 
 
-__all__ = ["camel_case", "common_dataset_handler", "to_d", "to_numpy"]
+# The following few functions and constants are from https://stackoverflow.com/a/1653248
+
+_WORD_DIVIDERS = frozenset((" ", "\t", "\r", "\n"))
+
+_QUOTE_CHARS_DICT = {
+    "\\": "\\",
+    " ": " ",
+    '"': '"',
+    "r": "\r",
+    "n": "\n",
+    "t": "\t",
+}
+
+
+def parse_to_argv_gen(s):
+    """
+    Do a sys.argv style parse of the input string
+
+    :param s: Input string
+    :type s: ```str```
+
+    :return: Generator of tokens; like in sys.argv
+    :rtype: ```Iterator[str]```
+    """
+
+    def _raise_type_error():
+        """
+        Common error to raise
+        """
+        raise TypeError("Bytes must be decoded to Unicode first")
+
+    is_in_quotes = False
+    instring_iter = iter(s)
+    join_string = s[0:0]
+
+    c_list = []
+    c = " "
+    while True:
+        # Skip whitespace
+        try:
+            while True:
+                if not isinstance(c, str) and version_info[0] >= 3:
+                    _raise_type_error()
+                if c not in _WORD_DIVIDERS:
+                    break
+                c = next(instring_iter)
+        except StopIteration:
+            break
+        # Read word
+        try:
+            while True:
+                if not isinstance(c, str) and version_info[0] >= 3:
+                    _raise_type_error()
+                if not is_in_quotes and c in _WORD_DIVIDERS:
+                    break
+                if c == '"':
+                    is_in_quotes = not is_in_quotes
+                    c = None
+                elif c == "\\":
+                    c = next(instring_iter)
+                    c = _QUOTE_CHARS_DICT.get(c)
+                if c is not None:
+                    c_list.append(c)
+                c = next(instring_iter)
+            yield join_string.join(c_list)
+            c_list = []
+        except StopIteration:
+            yield join_string.join(c_list)
+            break
+
+
+def parse_to_argv(s):
+    """
+    Do a sys.argv style parse of the input string
+
+    :param s: Input string
+    :type s: ```str```
+
+    :return: List of tokens; like in sys.argv
+    :rtype: ```List[str]```
+    """
+    return list(parse_to_argv_gen(s))
+
+
+__all__ = ["camel_case", "common_dataset_handler", "parse_to_argv", "to_d", "to_numpy"]

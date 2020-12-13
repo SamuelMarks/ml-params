@@ -141,7 +141,7 @@ class TestMain(TestCase):
                     (
                         "train",
                         "--callbacks",
-                        "TensorBoard: log_dir: {!r}".format(log_dir),
+                        'TensorBoard: "--log_dir={!r}"'.format(log_dir),
                         "--loss",
                         "BinaryCrossentropy",
                         "--optimizer",
@@ -158,10 +158,14 @@ class TestMain(TestCase):
         ), patch("sys.stdout", new_callable=StringIO) as out, patch(
             "sys.stderr", new_callable=StringIO
         ) as err:
+
             self.assertIsNone(main(_argv))
 
         print(err.getvalue(), file=sys.stderr)
-        print(out.getvalue(), file=sys.stdout)
+        out_str = out.getvalue()
+        self.assertIn("Epoch 3/3", out_str)
+        # c = Counter(out_str.split(" "))
+        # for word in "val_loss", "CLI", "parser": self.assertEqual(c[word], 3)
 
     def test_version(self) -> None:
         """ Tests that main will give you the right version """

@@ -19,4 +19,4 @@ def rpartial(func, *args):
     return lambda *a: func(*(a + args))
 
 
-__all__ = ["unittest_main"]
+__all__ = ["unittest_main", "rpartial", "TF_SUPPORTED"]

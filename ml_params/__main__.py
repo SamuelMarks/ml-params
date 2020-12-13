@@ -5,19 +5,17 @@ CLI interface
 import sys
 from argparse import SUPPRESS, ArgumentParser, HelpFormatter
 from collections import deque
-from enum import Enum
 from functools import partial
 from importlib import import_module
 from itertools import filterfalse
-from operator import itemgetter
+from operator import eq, itemgetter
 from os import environ
 
-from argparse_utils.actions.enum import EnumAction
 from pkg_resources import working_set
-from yaml import safe_load as loads
 
 from ml_params import __version__
 from ml_params.base import BaseTrainer
+from ml_params.utils import parse_to_argv
 
 if sys.version[0] == "3":
     string_types = (str,)
@@ -37,6 +35,8 @@ engine_enum = tuple(
     map(lambda p: (lambda q: (q.title(), q))(p[p.rfind("-") + 1 :]), engines)
 )
 
+name_tpl = "{name}Config"
+
 
 def parse_from_symbol_table(value, dest, symbol_table):
     """
@@ -51,16 +51,16 @@ def parse_from_symbol_table(value, dest, symbol_table):
     :param symbol_table: A mapping from string to an in memory construct, e.g., a class or function.
     :type symbol_table: ```Dict[Str, Any]```
 
-    :return: (Constructor, unparsed arguments) if found else (None, None)
-    :rtype: ```Tuple[Optional[Any], Optional[Str]]
+    :return: (name, Constructor, unparsed arguments) if found else (None, None, None)
+    :rtype: ```Tuple[Optional[str], Optional[Any], Optional[str]]
     """
     if dest in symbol_table and isinstance(value, str):
         name, _, raw = value.partition(":")
-        config_name = "{name}Config".format(name=name)
+        config_name = name_tpl.format(name=name)
         if _ and raw and config_name in symbol_table[dest].__all__:
-            return getattr(symbol_table[dest], config_name), raw
+            return name, getattr(symbol_table[dest], config_name), raw
 
-    return None, None
+    return None, None, None
 
 
 class ImportArgumentParser(ArgumentParser):
@@ -159,7 +159,7 @@ class ImportArgumentParser(ArgumentParser):
         """
         super(ImportArgumentParser, self)._check_value(
             action,
-            value.__class__.__name__[: -len("Config")]
+            value.__class__.__name__
             if action.choices is not None
             and value not in action.choices
             and not isinstance(value, (str, int, float, complex, list, tuple, set))
@@ -185,8 +185,8 @@ def _build_parser(symbol_table=None):
 
     parser.add_argument(
         "--engine",
-        type=Enum("EngineEnum", engine_enum),
-        action=EnumAction,
+        type=str,
+        choices=tuple(map(itemgetter(1), engine_enum)),
         help='ML engine, e.g., "TensorFlow", "JAX", "pytorch"',
     )
 
@@ -233,7 +233,7 @@ def main(argv=None):
         "ML_PARAMS_ENGINE"
     )
 
-    if any(filter(lambda eng: eng == engine, map(itemgetter(1), engine_enum))):
+    if any(filter(partial(eq, engine), map(itemgetter(1), engine_enum))):
         engine = import_module(
             "{engine_fqdn}.ml_params.cli".format(
                 engine_fqdn="ml_params_{engine_name}".format(engine_name=engine_name)
@@ -294,50 +294,53 @@ def main(argv=None):
 
     # Make required CLI arguments optional iff they are required but have a default value.
 
-    def remove_required(sub_parser_action_idx, argument_parser_name, action_idx):
-        """
-        Set the required parameter to False
+    def remove_required(the_parser):
+        def _remove_required(sub_parser_action_idx, argument_parser_name, action_idx):
+            """
+            Set the required parameter to False
 
-        :param sub_parser_action_idx: index of sub_parser_action
-        :type sub_parser_action_idx: ```str```
+            :param sub_parser_action_idx: index of sub_parser_action
+            :type sub_parser_action_idx: ```str```
 
-        :param argument_parser_name: name of argument_parser
-        :type argument_parser_name: ```str```
+            :param argument_parser_name: name of argument_parser
+            :type argument_parser_name: ```str```
 
-        :param action_idx: index of action
-        :type action_idx: ```int```
-        """
-        _parser._subparsers._group_actions[sub_parser_action_idx].choices[
-            argument_parser_name
-        ]._actions[action_idx].required = False
+            :param action_idx: index of action
+            :type action_idx: ```int```
+            """
+            the_parser._subparsers._group_actions[sub_parser_action_idx].choices[
+                argument_parser_name
+            ]._actions[action_idx].required = False
 
-    deque(
-        map(
-            lambda idx_sub_parser_action: deque(
-                map(
-                    lambda name_argument_parser: deque(
-                        map(
-                            lambda idx_action: remove_required(
-                                sub_parser_action_idx=idx_sub_parser_action[0],
-                                argument_parser_name=name_argument_parser[0],
-                                action_idx=idx_action[0],
+        deque(
+            map(
+                lambda idx_sub_parser_action: deque(
+                    map(
+                        lambda name_argument_parser: deque(
+                            map(
+                                lambda idx_action: _remove_required(
+                                    sub_parser_action_idx=idx_sub_parser_action[0],
+                                    argument_parser_name=name_argument_parser[0],
+                                    action_idx=idx_action[0],
+                                ),
+                                filterfalse(
+                                    lambda idx_action: idx_action[1].default
+                                    in frozenset((None, SUPPRESS)),
+                                    enumerate(name_argument_parser[1]._actions),
+                                ),
                             ),
-                            filterfalse(
-                                lambda idx_action: idx_action[1].default
-                                in frozenset((None, SUPPRESS)),
-                                enumerate(name_argument_parser[1]._actions),
-                            ),
+                            maxlen=0,
                         ),
-                        maxlen=0,
+                        idx_sub_parser_action[1].choices.items(),
                     ),
-                    idx_sub_parser_action[1].choices.items(),
+                    maxlen=0,
                 ),
-                maxlen=0,
+                enumerate(the_parser._subparsers._group_actions),
             ),
-            enumerate(_parser._subparsers._group_actions),
-        ),
-        maxlen=0,
-    )
+            maxlen=0,
+        )
+
+    remove_required(_parser)
 
     _parse_from_symbol_table = partial(
         parse_from_symbol_table, symbol_table=symbol_table
@@ -379,10 +382,25 @@ def main(argv=None):
         :return: Identity or the constructed symbol out of the symbol table (with args)
         :rtype: ```Union[str, Any]```
         """
-        init, arguments = _parse_from_symbol_table(type_name, dest)
+        name, init, arguments = _parse_from_symbol_table(type_name, dest)
         if init is not None and arguments is not None:
-            __args = loads(arguments)
-            return init(**__args)
+            # if CLI_SUB_SUB_PARSE_TYPE == YAML:
+            #     __args = yaml.safe_load(arguments)
+            #     return init(**__args)
+            # else:
+            __parser = ArgumentParser(
+                prog=dest, description="Generated parser for a single parameter"
+            )
+            __sub = __parser.add_subparsers(
+                help="Subcommand for internal compatibility with helper functions"
+            )
+            ___actual_parser = __sub.add_parser(name, help="The actual parser")
+            init(___actual_parser)
+            remove_required(__parser)
+            sub_namespace = __parser.parse_args([name] + parse_to_argv(arguments))
+            del __parser, __sub, ___actual_parser
+            sub_namespace.__class__.__name__ = name
+            return sub_namespace
         return type_name
 
     # When the symbol_table contains the target (dest) CLI parameter,
@@ -429,6 +447,7 @@ def main(argv=None):
     while len(rest) != 0:
         args, rest = _parser.parse_known_args(rest)
 
+        print("args:", args, ";")
         getattr(trainer, args.command)(
             **{
                 k: v
