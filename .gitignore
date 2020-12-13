@@ -1,3 +1,7 @@
+# Filled in by tests as the location of TensorBoard event files &etc.
+ml_params/tests/train
+ml_params/tests/validation
+
 # Jetbrains IDEs
 .idea
 out/

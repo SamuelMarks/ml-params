@@ -39,6 +39,21 @@ engine_enum = tuple(
 
 
 def parse_from_symbol_table(value, dest, symbol_table):
+    """
+    Try to acquire the constructor and [unparsed] arguments
+
+    :param value: The value to be checked
+    :type value: ```Any```
+
+    :param dest: The name of the attribute to be added to the object returned by `parse_args()`.
+    :type dest: ```str```
+
+    :param symbol_table: A mapping from string to an in memory construct, e.g., a class or function.
+    :type symbol_table: ```Dict[Str, Any]```
+
+    :return: (Constructor, unparsed arguments) if found else (None, None)
+    :rtype: ```Tuple[Optional[Any], Optional[Str]]
+    """
     if dest in symbol_table and isinstance(value, str):
         name, _, raw = value.partition(":")
         config_name = "{name}Config".format(name=name)
@@ -66,7 +81,55 @@ class ImportArgumentParser(ArgumentParser):
         conflict_handler="error",
         add_help=True,
         allow_abbrev=True,
+        exit_on_error=True,
     ):
+        """
+        Construct the argument parser
+
+        :param symbol_table: A mapping from string to an in memory construct, e.g., a class or function.
+        :type symbol_table: ```Dict[Str, Any]```
+
+        :param prog: The name of the program
+        :type prog: ```Optional[str]```
+
+        :param usage: The string describing the program usage (default: generated from arguments added to parser)
+        :type usage: Optional[str]
+
+        :param description: Text to display before the argument help
+        :type description: ```Optional[str]```
+
+        :param epilog: Text to display after the argument help
+        :type epilog: ```Optional[str]```
+
+        :param parents: A list of `ArgumentParser` objects whose arguments should also be included
+        :type parents: ```Sequence[ArgumentParser]```
+
+        :param formatter_class: A class for customizing the help output
+        :type formatter_class: ```_FormatterClass```
+
+        :param prefix_chars: The set of characters that prefix optional arguments
+        :type prefix_chars: ```str```
+
+        :param fromfile_prefix_chars: The set of characters that prefix files from which
+            additional arguments should be read
+        :type fromfile_prefix_chars: ```Optional[str]```
+
+        :param argument_default: The global default value for arguments
+        :type argument_default: ```Optional[str]```
+
+        :param conflict_handler: The strategy for resolving conflicting optionals (usually unnecessary)
+        :type conflict_handler: ```str```
+
+        :param add_help: Add a `-h`/`--help` option to the parser
+        :type add_help: ```bool```
+
+        :param allow_abbrev: Allows long options to be abbreviated if the abbreviation is unambiguous
+        :type allow_abbrev: ```bool```
+
+        :param exit_on_error: Determines whether or not `ArgumentParser` exits with error info when an error occurs.
+            (3.9+ only)
+        :type exit_on_error: ```bool```
+        """
         super(ImportArgumentParser, self).__init__(
             prog=prog,
             usage=usage,
@@ -80,11 +143,20 @@ class ImportArgumentParser(ArgumentParser):
             conflict_handler=conflict_handler,
             add_help=add_help,
             allow_abbrev=allow_abbrev,
+            **dict(exit_on_error=exit_on_error) if sys.version_info[:2] > (3, 8) else {}
         )
         self.symbol_table = symbol_table
 
     def _check_value(self, action, value):
-        """ Check the value, parsing out the config class name if that object is provided """
+        """
+        Check the value, parsing out the config class name if that object is provided
+
+        :param action: The action for the value being checked
+        :type action: ```argparse.Action```
+
+        :param value: The value to be checked
+        :type value: ```Any```
+        """
         super(ImportArgumentParser, self)._check_value(
             action,
             value.__class__.__name__[: -len("Config")]
@@ -206,15 +278,6 @@ def main(argv=None):
         help="subcommand to run. Hacked to be chainable.", dest="command"
     )
 
-    def dbg(arg):
-        dbg.c += 1
-        if dbg.c < 10:
-            for attr in dir(arg):
-                print(attr, getattr(arg, attr))
-        return arg
-
-    dbg.c = 0
-
     deque(
         (
             print("Adding CLI parser: {!s} ;".format(func_name))
@@ -303,12 +366,24 @@ def main(argv=None):
             .dest,
         )
 
-    def parse_type(v, dest):
-        init, arguments = _parse_from_symbol_table(v, dest)
+    def parse_type(type_name, dest):
+        """
+        Parse the type out of the symbol table (if in, else identity)
+
+        :param type_name: The value of the `type=` from argparse
+        :type type_name: ```str```
+
+        :param dest: The name of the attribute to be added to the object returned by `parse_args()`.
+        :type dest: ```str```
+
+        :return: Identity or the constructed symbol out of the symbol table (with args)
+        :rtype: ```Union[str, Any]```
+        """
+        init, arguments = _parse_from_symbol_table(type_name, dest)
         if init is not None and arguments is not None:
             __args = loads(arguments)
             return init(**__args)
-        return v
+        return type_name
 
     # When the symbol_table contains the target (dest) CLI parameter,
     # change its type so that it'll parse out and construct the right [configuration] object
@@ -353,10 +428,6 @@ def main(argv=None):
     _parser.symbol_table = symbol_table
     while len(rest) != 0:
         args, rest = _parser.parse_known_args(rest)
-        # print("__main__::args:", args, ";\n__main__::rest:", rest, ";")
-
-        # if args.command == 'train':
-        #    exit(5)
 
         getattr(trainer, args.command)(
             **{

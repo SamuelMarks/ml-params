@@ -151,23 +151,16 @@ class TestMain(TestCase):
                 )
             )
         )
-        # patch("sys.stdout", new_callable=StringIO) as out
-        # patch("sys.stderr", new_callable=StringIO) as err
-        with self.assertRaises(SystemExit) as e, patch(
-            "ml_params.__main__.environ", {"ML_PARAMS_ENGINE": "tensorflow"}
-        ):
-            self.assertIsNone(main(_argv))
-            """
-            try:
-                self.assertIsNone(main(_argv))
-            except:
-                print(err.getvalue(), file=sys.stderr)
-                print(out.getvalue(), file=sys.stdout)
-                raise
-            """
 
-        # self.assertEqual(err.getvalue(), "")
-        self.assertEqual(e.exception.code, SystemExit(0).code)
+        with patch(
+            "ml_params.__main__.environ", {"ML_PARAMS_ENGINE": "tensorflow"}
+        ), patch("sys.stdout", new_callable=StringIO) as out, patch(
+            "sys.stderr", new_callable=StringIO
+        ) as err:
+            self.assertIsNone(main(_argv))
+
+        print(err.getvalue(), file=sys.stderr)
+        print(out.getvalue(), file=sys.stdout)
 
     def test_version(self) -> None:
         """ Tests that main will give you the right version """
@@ -205,9 +198,6 @@ class TestMain(TestCase):
         self.assertEqual(
             get_one_arg(foo_cli_argv[:1], ["--haz", "bzr"] + foo_cli_argv), "bar"
         )
-
-        # one = "store_true",
-        # self.assertEqual(get_one_arg(one, one), one[0])
 
 
 unittest_main()
