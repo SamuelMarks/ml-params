@@ -8,7 +8,7 @@ from collections import deque
 from functools import partial
 from importlib import import_module
 from itertools import filterfalse
-from operator import eq, itemgetter
+from operator import attrgetter, eq, itemgetter
 from os import environ
 
 from pkg_resources import working_set
@@ -28,7 +28,7 @@ else:
 engines = tuple(
     filter(
         lambda p: p.replace("-", "_").startswith("ml_params_"),
-        map(lambda p: p.project_name, working_set),
+        map(attrgetter("project_name"), working_set),
     )
 )
 engine_enum = tuple(
@@ -389,12 +389,19 @@ def main(argv=None):
             #     return init(**__args)
             # else:
             __parser = ArgumentParser(
-                prog=dest, description="Generated parser for a single parameter"
+                prog="--{dest}".format(dest=dest),
+                description="Generated parser for a single parameter",
             )
             __sub = __parser.add_subparsers(
                 help="Subcommand for internal compatibility with helper functions"
             )
-            ___actual_parser = __sub.add_parser(name, help="The actual parser")
+            ___actual_parser = __sub.add_parser(
+                name,
+                prog="{parent_prog} '{name}:".format(
+                    parent_prog=__parser.prog, name=name
+                ),
+                help="The actual parser",
+            )
             init(___actual_parser)
             remove_required(__parser)
             sub_namespace = __parser.parse_args([name] + parse_to_argv(arguments))
@@ -447,7 +454,6 @@ def main(argv=None):
     while len(rest) != 0:
         args, rest = _parser.parse_known_args(rest)
 
-        print("args:", args, ";")
         getattr(trainer, args.command)(
             **{
                 k: v

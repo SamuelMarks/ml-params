@@ -160,23 +160,10 @@ def to_d(obj):
     )
 
 
-# The following few functions and constants are from https://stackoverflow.com/a/1653248
-
-_WORD_DIVIDERS = frozenset((" ", "\t", "\r", "\n"))
-
-_QUOTE_CHARS_DICT = {
-    "\\": "\\",
-    " ": " ",
-    '"': '"',
-    "r": "\r",
-    "n": "\n",
-    "t": "\t",
-}
-
-
+# The next 2 functions are from https://stackoverflow.com/a/1653248
 def parse_to_argv_gen(s):
     """
-    Do a sys.argv style parse of the input string
+    Generate a sys.argv style parse of the input string
 
     :param s: Input string
     :type s: ```str```
@@ -184,48 +171,43 @@ def parse_to_argv_gen(s):
     :return: Generator of tokens; like in sys.argv
     :rtype: ```Iterator[str]```
     """
+    _QUOTE_CHARS_DICT = {
+        "\\": "\\",
+        " ": " ",
+        '"': '"',
+        "r": "\r",
+        "n": "\n",
+        "t": "\t",
+    }
 
-    def _raise_type_error():
-        """
-        Common error to raise
-        """
-        raise TypeError("Bytes must be decoded to Unicode first")
+    quoted, s_iter, join_string, c_list, c = False, iter(s), s[0:0], [], " "
+    err = "Bytes must be decoded to Unicode first"
 
-    is_in_quotes = False
-    instring_iter = iter(s)
-    join_string = s[0:0]
-
-    c_list = []
-    c = " "
     while True:
         # Skip whitespace
         try:
             while True:
-                if not isinstance(c, str) and version_info[0] >= 3:
-                    _raise_type_error()
-                if c not in _WORD_DIVIDERS:
+                assert isinstance(c, str) and version_info[0] >= 3, err
+                if not c.isspace():
                     break
-                c = next(instring_iter)
+                c = next(s_iter)
         except StopIteration:
             break
         # Read word
         try:
             while True:
-                if not isinstance(c, str) and version_info[0] >= 3:
-                    _raise_type_error()
-                if not is_in_quotes and c in _WORD_DIVIDERS:
+                assert isinstance(c, str) and version_info[0] >= 3, err
+                if not quoted and c.isspace():
                     break
                 if c == '"':
-                    is_in_quotes = not is_in_quotes
-                    c = None
+                    quoted, c = not quoted, None
                 elif c == "\\":
-                    c = next(instring_iter)
-                    c = _QUOTE_CHARS_DICT.get(c)
+                    c = _QUOTE_CHARS_DICT.get(next(s_iter))
                 if c is not None:
                     c_list.append(c)
-                c = next(instring_iter)
+                c = next(s_iter)
             yield join_string.join(c_list)
-            c_list = []
+            c_list.clear()
         except StopIteration:
             yield join_string.join(c_list)
             break

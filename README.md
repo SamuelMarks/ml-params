@@ -1,6 +1,6 @@
 ml_params
 =========
-![Python version range](https://img.shields.io/badge/python-3.5%20|%203.6%20|%203.7%20|%203.8%20|%203.9%20|%203.10a2-blue.svg)
+![Python version range](https://img.shields.io/badge/python-3.5%20|%203.6%20|%203.7%20|%203.8%20|%203.9%20|%203.10a3-blue.svg)
 ![Python implementation](https://img.shields.io/badge/implementation-cpython-blue.svg)
 [![License](https://img.shields.io/badge/license-Apache--2.0%20OR%20MIT-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Linting, testing, and coverage](https://github.com/SamuelMarks/ml-params/workflows/Linting,%20testing,%20and%20coverage/badge.svg)](https://github.com/SamuelMarks/ml-params/actions)
@@ -179,6 +179,88 @@ First let's get some help text:
                             batch size at each iteration.
       --kwargs KWARGS       additional keyword arguments
 
+
+You can also go further, and provide [meta]parameters for your parameters—with `:`—including asking for help text:
+
+    $ python -m ml_params train --engine 'tensorflow' \ 
+                                --callbacks 'TensorBoard: --log_dir "/tmp" --help'
+
+    usage: --callbacks 'TensorBoard: [-h] [--log_dir LOG_DIR]
+                                     [--histogram_freq HISTOGRAM_FREQ]
+                                     [--write_graph WRITE_GRAPH]
+                                     [--write_images WRITE_IMAGES]
+                                     [--update_freq UPDATE_FREQ]
+                                     [--profile_batch PROFILE_BATCH]
+                                     [--embeddings_freq EMBEDDINGS_FREQ]
+                                     [--embeddings_metadata EMBEDDINGS_METADATA]
+                                     [--kwargs KWARGS]
+    
+    Enable visualizations for TensorBoard. TensorBoard is a visualization tool
+    provided with TensorFlow. This callback logs events for TensorBoard,
+    including: * Metrics summary plots * Training graph visualization * Activation
+    histograms * Sampled profiling If you have installed TensorFlow with pip, you
+    should be able to launch TensorBoard from the command line: ``` tensorboard
+    --logdir=path_to_your_logs ``` You can find more information about TensorBoard
+    [here](https://www.tensorflow.org/get_started/summaries_and_tensorboard).
+    Example (Basic): ```python tensorboard_callback =
+    tf.keras.callbacks.TensorBoard(log_dir="./logs") model.fit(x_train, y_train,
+    epochs=2, callbacks=[tensorboard_callback]) # run the tensorboard command to
+    view the visualizations. ``` Example (Profile): ```python # profile a single
+    batch, e.g. the 5th batch. tensorboard_callback =
+    tf.keras.callbacks.TensorBoard(log_dir='./logs', profile_batch=5)
+    model.fit(x_train, y_train, epochs=2, callbacks=[tensorboard_callback]) # Now
+    run the tensorboard command to view the visualizations (profile plugin). #
+    profile a range of batches, e.g. from 10 to 20. tensorboard_callback =
+    tf.keras.callbacks.TensorBoard(log_dir='./logs', profile_batch='10,20')
+    model.fit(x_train, y_train, epochs=2, callbacks=[tensorboard_callback]) # Now
+    run the tensorboard command to view the visualizations (profile plugin). ```
+    Raises: ValueError: If histogram_freq is set and no validation data is
+    provided.
+    
+    optional arguments:
+      -h, --help            show this help message and exit
+      --log_dir LOG_DIR     the path of the directory where to save the log files
+                            to be parsed by TensorBoard.
+      --histogram_freq HISTOGRAM_FREQ
+                            frequency (in epochs) at which to compute activation
+                            and weight histograms for the layers of the model. If
+                            set to 0, histograms won't be computed. Validation
+                            data (or split) must be specified for histogram
+                            visualizations.
+      --write_graph WRITE_GRAPH
+                            whether to visualize the graph in TensorBoard. The log
+                            file can become quite large when write_graph is set to
+                            True.
+      --write_images WRITE_IMAGES
+                            whether to write model weights to visualize as image
+                            in TensorBoard.
+      --update_freq UPDATE_FREQ
+                            `'batch'` or `'epoch'` or integer. When using
+                            `'batch'`, writes the losses and metrics to
+                            TensorBoard after each batch. The same applies for
+                            `'epoch'`. If using an integer, let's say `1000`, the
+                            callback will write the metrics and losses to
+                            TensorBoard every 1000 batches. Note that writing too
+                            frequently to TensorBoard can slow down your training.
+      --profile_batch PROFILE_BATCH
+                            Profile the batch(es) to sample compute
+                            characteristics. profile_batch must be a non-negative
+                            integer or a tuple of integers. A pair of positive
+                            integers signify a range of batches to profile. By
+                            default, it will profile the second batch. Set
+                            profile_batch=0 to disable profiling.
+      --embeddings_freq EMBEDDINGS_FREQ
+                            frequency (in epochs) at which embedding layers will
+                            be visualized. If set to 0, embeddings won't be
+                            visualized.
+      --embeddings_metadata EMBEDDINGS_METADATA
+                            a dictionary which maps layer name to a file name in
+                            which metadata for this embedding layer is saved. See
+                            the [details]( https://www.tensorflow.org/how_tos/embe
+                            dding_viz/#metadata_optional) about metadata files
+                            format. In case if the same metadata file is used for
+                            all embedding layers, string can be passed.
+      --kwargs KWARGS
 
 Now let's run multiple commands, which behind the scenes constructs a `Trainer` object and calls the relevant methods (subcommands) in the order you reference them:
 
