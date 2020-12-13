@@ -33,7 +33,10 @@ class TestUtils(TestCase):
                 sorted,
                 (
                     to_d(ml_params.utils).keys(),
-                    (ml_params.utils.__all__ + ["getmembers"]),
+                    (
+                        ml_params.utils.__all__
+                        + ["getmembers", "parse_to_argv_gen", "version_info"]
+                    ),
                 ),
             )
         )

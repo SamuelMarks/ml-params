@@ -5,7 +5,8 @@ Tests for the __main__ script
 import sys
 from io import StringIO
 from itertools import chain
-from os import environ, path
+from os import environ
+from tempfile import TemporaryDirectory
 from unittest import TestCase, skipIf
 from unittest.mock import MagicMock, patch
 
@@ -132,26 +133,26 @@ class TestMain(TestCase):
         """
         Tests that the special sub-params syntax works,
         such that `--foo bar can haz` will construct a `bar` object with `can=haz` as argument"""
-        log_dir = path.dirname(__file__)
-        _argv = list(
-            chain.from_iterable(
-                (
-                    ("load_data", "--dataset_name", "cifar10"),
-                    ("load_model", "--model", "MobileNet"),
+        with TemporaryDirectory() as log_dir:
+            _argv = list(
+                chain.from_iterable(
                     (
-                        "train",
-                        "--callbacks",
-                        'TensorBoard: "--log_dir={!r}"'.format(log_dir),
-                        "--loss",
-                        "BinaryCrossentropy",
-                        "--optimizer",
-                        "Adam",
-                        "--epochs",
-                        "3",
-                    ),
+                        ("load_data", "--dataset_name", "cifar10"),
+                        ("load_model", "--model", "MobileNet"),
+                        (
+                            "train",
+                            "--callbacks",
+                            'TensorBoard: "--log_dir={!r}"'.format(log_dir),
+                            "--loss",
+                            "BinaryCrossentropy",
+                            "--optimizer",
+                            "Adam",
+                            "--epochs",
+                            "3",
+                        ),
+                    )
                 )
             )
-        )
 
         with patch(
             "ml_params.__main__.environ", {"ML_PARAMS_ENGINE": "tensorflow"}
