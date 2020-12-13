@@ -127,6 +127,7 @@ class TestMain(TestCase):
         del environ["ML_PARAMS_ENGINE"]
         environ.update(env_backup)
 
+    @skipIf(not TF_SUPPORTED, "TensorFlow isn't supported on this Python version")
     def test_sub_arguments(self) -> None:
         """
         Tests that the special sub-params syntax works,
