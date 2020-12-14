@@ -2,9 +2,11 @@
 Shared utility functions used by tests
 """
 from sys import version_info
+from os import name
 from unittest import main
 
-TF_SUPPORTED = (3, 8) >= version_info[:2] > (3, 5)
+# Windows is support for TensorFlow, but tfds needs my https://github.com/tensorflow/datasets/pull/2840
+TF_SUPPORTED = (3, 8) >= version_info[:2] > (3, 5) or name == 'nt'
 
 
 def unittest_main():
