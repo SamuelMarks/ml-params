@@ -36,11 +36,11 @@ jobs:
                     pip install -r requirements.txt
             -   name: install_extra_dependencies
                 run: |
-                    pip install https://github.com/SamuelMarks/ml-params-tensorflow/archive/master.zip#egg=ml-params-tensorflow
                     pip install -r https://raw.githubusercontent.com/SamuelMarks/ml-params-tensorflow/master/requirements.txt
+                    pip install https://github.com/SamuelMarks/ml-params-tensorflow/archive/master.zip#egg=ml-params-tensorflow
                     # Used by multiple tests and want to skip the race condition (that multiple will DL it)
                     python -m ml_params --engine=tensorflow load_data --dataset_name cifar10
-                if: matrix.python-version == '3.5' || matrix.python-version == '3.6'  || matrix.python-version == '3.7' || matrix.python-version == '3.8'
+                if: matrix.python-version == '3.6'  || matrix.python-version == '3.7' || matrix.python-version == '3.8'
             -   name: Test with unittest
                 run: |
                     python setup.py test
