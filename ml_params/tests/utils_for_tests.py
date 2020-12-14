@@ -6,7 +6,7 @@ from os import name
 from unittest import main
 
 # Windows is support for TensorFlow, but tfds needs my https://github.com/tensorflow/datasets/pull/2840
-TF_SUPPORTED = (3, 8) >= version_info[:2] > (3, 5) or name == 'nt'
+TF_SUPPORTED = (3, 8) >= version_info[:2] > (3, 5) and name != 'nt'
 
 
 def unittest_main():
