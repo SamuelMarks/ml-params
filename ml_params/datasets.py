@@ -3,6 +3,7 @@ Implementation of some common datasets, expected to be called from projects whic
 """
 
 from functools import partial
+from os import path
 
 try:
     from ml_prepare.datasets import datasets2classes
@@ -49,6 +50,7 @@ def load_data_from_ml_prepare(
     :return: Train and tests dataset splits
     :rtype: ```Union[Tuple[tf.data.Dataset,tf.data.Dataset,tfds.core.DatasetInfo], Tuple[np.ndarray,np.ndarray,Any]]```
     """
+    import tensorflow_datasets.public_api as tfds
     from ml_prepare.exectors import build_tfds_dataset
 
     assert dataset_name in datasets2classes
@@ -65,7 +67,15 @@ def load_data_from_ml_prepare(
         download_and_prepare_kwargs = getattr(ds_builder, "download_and_prepare_kwargs")
         delattr(ds_builder, "download_and_prepare_kwargs")
     else:
-        download_and_prepare_kwargs = {}
+        # Reasonable defaults
+        download_and_prepare_kwargs = dict(
+            download_config=tfds.download.DownloadConfig(
+                extract_dir=tfds_dir,
+                download_mode=tfds.core.dataset_builder.REUSE_DATASET_IF_EXISTS,
+                manual_dir=path.join(tfds_dir, "downloads", dataset_name),
+            ),
+            download_dir=tfds_dir,
+        )
 
     return common_dataset_handler(
         ds_builder=ds_builder,

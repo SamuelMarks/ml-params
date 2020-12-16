@@ -2,7 +2,10 @@
 Collection of utility functions
 """
 from inspect import getmembers
+from os import path, listdir
 from sys import version_info
+from functools import partial
+from operator import contains
 
 
 def camel_case(st, upper=False):
@@ -50,10 +53,31 @@ def common_dataset_handler(
     if hasattr(ds_builder, "download_and_prepare") and hasattr(
         ds_builder, "as_dataset"
     ):
-        ds_builder.download_and_prepare(**download_and_prepare_kwargs)
+        train_ds, test_ds, dl_and_prep, tfrecords_dir = None, None, True, None
+        if "download_config" in download_and_prepare_kwargs and download_and_prepare_kwargs["download_config"].manual_dir:
+            dl_and_prep = not path.isdir(ds_builder._data_dir)
+            if dl_and_prep:
+                name_slash = "{}{}{}".format(path.sep, ds_builder.name, path.sep)
+                other_data_dir = ds_builder._data_dir.replace(name_slash,
+                                                              "{}downloads{}".format(path.sep, name_slash))
+                dl_and_prep = not path.isdir(other_data_dir)
+                if not dl_and_prep:
+                    ds_builder._data_dir = other_data_dir
+            if not dl_and_prep:
+                import tensorflow as tf
+                data_dir_ls = listdir(ds_builder._data_dir)
+                train_ds = tf.data.TFRecordDataset(tuple(filter(partial(contains, "train.tfrecord"),
+                                                            data_dir_ls)))
+                setattr(train_ds, "_info", ds_builder.info)
+                test_ds = tf.data.TFRecordDataset(tuple(filter(partial(contains, "test.tfrecord"),
+                                                            data_dir_ls)))
+        if dl_and_prep:
+            ds_builder.download_and_prepare(**download_and_prepare_kwargs)
 
-        train_ds = ds_builder.as_dataset(split="train", batch_size=-1)
-        test_ds = ds_builder.as_dataset(split="test", batch_size=-1)
+        if train_ds is None:
+            train_ds = ds_builder.as_dataset(split="train", batch_size=-1)
+        if test_ds is None:
+            test_ds = ds_builder.as_dataset(split="test", batch_size=-1)
     elif hasattr(ds_builder, "train_stream") and hasattr(ds_builder, "eval_stream"):
         return ds_builder  # Handled elsewhere, this is from trax
     else:
