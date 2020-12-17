@@ -1,11 +1,12 @@
 """
 Collection of utility functions
 """
-from inspect import getmembers
-from os import path, listdir
-from sys import version_info
 from functools import partial
-from operator import contains
+from inspect import getmembers
+from itertools import filterfalse
+from operator import contains, itemgetter
+from os import listdir, path
+from sys import version_info
 
 
 def camel_case(st, upper=False):
@@ -54,23 +55,60 @@ def common_dataset_handler(
         ds_builder, "as_dataset"
     ):
         train_ds, test_ds, dl_and_prep, tfrecords_dir = None, None, True, None
-        if "download_config" in download_and_prepare_kwargs and download_and_prepare_kwargs["download_config"].manual_dir:
+        if (
+            "download_config" in download_and_prepare_kwargs
+            and download_and_prepare_kwargs["download_config"].manual_dir
+        ):
             dl_and_prep = not path.isdir(ds_builder._data_dir)
             if dl_and_prep:
                 name_slash = "{}{}{}".format(path.sep, ds_builder.name, path.sep)
-                other_data_dir = ds_builder._data_dir.replace(name_slash,
-                                                              "{}downloads{}".format(path.sep, name_slash))
+                other_data_dir = ds_builder._data_dir.replace(
+                    name_slash, "{}downloads{}".format(path.sep, name_slash)
+                )
                 dl_and_prep = not path.isdir(other_data_dir)
                 if not dl_and_prep:
                     ds_builder._data_dir = other_data_dir
             if not dl_and_prep:
                 import tensorflow as tf
-                data_dir_ls = listdir(ds_builder._data_dir)
-                train_ds = tf.data.TFRecordDataset(tuple(filter(partial(contains, "train.tfrecord"),
-                                                            data_dir_ls)))
+
+                data_dir_ls = tuple(
+                    map(
+                        lambda fname: (
+                            "train.tfrecord" in fname and fname,
+                            "test.tfrecord" in fname and fname,
+                        ),
+                        map(
+                            partial(path.join, ds_builder._data_dir),
+                            filterfalse(
+                                partial(contains, "incomplete"),
+                                listdir(ds_builder._data_dir),
+                            ),
+                        ),
+                    )
+                )
+                train_records = tuple(filter(None, (map(itemgetter(0), data_dir_ls))))
+                assert train_records
+                train_ds = tf.data.TFRecordDataset(train_records)
                 setattr(train_ds, "_info", ds_builder.info)
-                test_ds = tf.data.TFRecordDataset(tuple(filter(partial(contains, "test.tfrecord"),
-                                                            data_dir_ls)))
+                test_records = tuple(filter(None, (map(itemgetter(1), data_dir_ls))))
+                assert test_records
+                test_ds = tf.data.TFRecordDataset(test_records)
+                for raw_record in test_ds.take(1):
+                    print(
+                        "ds_builder.info.features.decode_example(raw_record):",
+                        ds_builder.info.features.decode_example(raw_record),
+                        ";",
+                    )
+
+                    # print(repr(test_ds))
+                    # example = tf.train.Example()
+                    # example.ParseFromString(raw_record.numpy())
+
+                    print("ds_builder.info:", ds_builder.info.features.keys(), ";")
+                    # tf.io.parse_single_example(raw_record, ds_builder._description())
+                    # tf.io.parse_single_example(ds_builder.info.features.decode_example(raw_record))
+                raw_example = next(iter(test_ds))
+                parsed = tf.train.Example.FromString(raw_example.numpy())
         if dl_and_prep:
             ds_builder.download_and_prepare(**download_and_prepare_kwargs)
 
