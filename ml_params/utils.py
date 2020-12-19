@@ -75,7 +75,7 @@ def common_dataset_handler(
                     ds_builder.name,
                     data_dir=path.dirname(path.dirname(ds_builder._data_dir)),
                 )
-                as_dataset_kwargs.update({"as_supervised": True, "batch_size": 128})
+                as_dataset_kwargs.update({"as_supervised": True, "batch_size": 1})
         if dl_and_prep:
             ds_builder.download_and_prepare(**download_and_prepare_kwargs)
 
