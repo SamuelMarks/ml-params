@@ -143,15 +143,30 @@ class BaseTrainer(ABC):
            to be passed into the model. If empty, doesn't call, unless call=True.
         :type **model_kwargs: ```**model_kwargs```
 
-        :return: self.model, e.g., the result of applying `model_kwargs` on model
-        :rtype: ```Any```
+        :return: Function returning the model, e.g., the result of applying `model_kwargs` on model
+        :rtype: ```Callable[[], Any]```
         """
-        if not callable(model) or isinstance(model, str):
-            call = False
-        self.model = (
-            model if len(model_kwargs) == 0 or call is False else model(**model_kwargs)
-        )
-        return self.model
+
+        def get_model():
+            """
+            Call this to get the model.
+            Distributed strategies need models to be constructed within its scope,
+            so that's why this function
+
+            :return: model, e.g., the result of applying `model_kwargs` on model
+            :rtype: ```Any```
+            """
+            if not callable(model) or isinstance(model, str):
+                call = False
+            self.model = (
+                model
+                if len(model_kwargs) == 0 or call is False
+                else model(**model_kwargs)
+            )
+            return self.model
+
+        self.get_model = get_model
+        return self.get_model
 
     def train_c(self, config):
         """

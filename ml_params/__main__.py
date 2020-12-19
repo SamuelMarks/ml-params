@@ -301,6 +301,7 @@ def main(argv=None):
         :param the_parser: The argument parser object
         :type the_parser: ```ArgumentParser```
         """
+
         def _remove_required(sub_parser_action_idx, argument_parser_name, action_idx):
             """
             Set the required parameter to False
