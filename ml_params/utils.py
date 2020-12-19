@@ -1,11 +1,8 @@
 """
 Collection of utility functions
 """
-from functools import partial
 from inspect import getmembers
-from itertools import filterfalse
-from operator import contains, itemgetter
-from os import listdir, path
+from os import path
 from sys import version_info
 
 
@@ -51,6 +48,7 @@ def common_dataset_handler(
     :return: Train and tests dataset splits
     :rtype: ```Union[Tuple[tf.data.Dataset,tf.data.Dataset,tfds.core.DatasetInfo], Tuple[np.ndarray,np.ndarray,Any]]```
     """
+    as_dataset_kwargs, info = {"batch_size": -1}, None
     if hasattr(ds_builder, "download_and_prepare") and hasattr(
         ds_builder, "as_dataset"
     ):
@@ -68,54 +66,23 @@ def common_dataset_handler(
                 dl_and_prep = not path.isdir(other_data_dir)
                 if not dl_and_prep:
                     ds_builder._data_dir = other_data_dir
+
             if not dl_and_prep:
-                import tensorflow as tf
+                import tensorflow_datasets.public_api as tfds
 
-                data_dir_ls = tuple(
-                    map(
-                        lambda fname: (
-                            "train.tfrecord" in fname and fname,
-                            "test.tfrecord" in fname and fname,
-                        ),
-                        map(
-                            partial(path.join, ds_builder._data_dir),
-                            filterfalse(
-                                partial(contains, "incomplete"),
-                                listdir(ds_builder._data_dir),
-                            ),
-                        ),
-                    )
+                info = ds_builder.info
+                ds_builder = tfds.builder(
+                    ds_builder.name,
+                    data_dir=path.dirname(path.dirname(ds_builder._data_dir)),
                 )
-                train_records = tuple(filter(None, (map(itemgetter(0), data_dir_ls))))
-                assert train_records
-                train_ds = tf.data.TFRecordDataset(train_records)
-                setattr(train_ds, "_info", ds_builder.info)
-                test_records = tuple(filter(None, (map(itemgetter(1), data_dir_ls))))
-                assert test_records
-                test_ds = tf.data.TFRecordDataset(test_records)
-                for raw_record in test_ds.take(1):
-                    print(
-                        "ds_builder.info.features.decode_example(raw_record):",
-                        ds_builder.info.features.decode_example(raw_record),
-                        ";",
-                    )
-
-                    # print(repr(test_ds))
-                    # example = tf.train.Example()
-                    # example.ParseFromString(raw_record.numpy())
-
-                    print("ds_builder.info:", ds_builder.info.features.keys(), ";")
-                    # tf.io.parse_single_example(raw_record, ds_builder._description())
-                    # tf.io.parse_single_example(ds_builder.info.features.decode_example(raw_record))
-                raw_example = next(iter(test_ds))
-                parsed = tf.train.Example.FromString(raw_example.numpy())
+                as_dataset_kwargs.update({"as_supervised": True, "batch_size": 128})
         if dl_and_prep:
             ds_builder.download_and_prepare(**download_and_prepare_kwargs)
 
         if train_ds is None:
-            train_ds = ds_builder.as_dataset(split="train", batch_size=-1)
+            train_ds = ds_builder.as_dataset(split="train", **as_dataset_kwargs)
         if test_ds is None:
-            test_ds = ds_builder.as_dataset(split="test", batch_size=-1)
+            test_ds = ds_builder.as_dataset(split="test", **as_dataset_kwargs)
     elif hasattr(ds_builder, "train_stream") and hasattr(ds_builder, "eval_stream"):
         return ds_builder  # Handled elsewhere, this is from trax
     else:
@@ -131,7 +98,7 @@ def common_dataset_handler(
         train_ds["image"] = K.float32(train_ds["image"]) / scale
         test_ds["image"] = K.float32(test_ds["image"]) / scale
 
-    return train_ds, test_ds, train_ds._info
+    return train_ds, test_ds, info or train_ds._info
 
 
 def to_numpy(obj, K=None, device=None):

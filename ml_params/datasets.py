@@ -51,7 +51,7 @@ def load_data_from_ml_prepare(
     :rtype: ```Union[Tuple[tf.data.Dataset,tf.data.Dataset,tfds.core.DatasetInfo], Tuple[np.ndarray,np.ndarray,Any]]```
     """
     import tensorflow_datasets.public_api as tfds
-    from ml_prepare.exectors import build_tfds_dataset
+    from ml_prepare.executors import build_tfds_dataset
 
     assert dataset_name in datasets2classes
 
