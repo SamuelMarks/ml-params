@@ -52,7 +52,7 @@ def common_dataset_handler(
     if hasattr(ds_builder, "download_and_prepare") and hasattr(
         ds_builder, "as_dataset"
     ):
-        train_ds, test_ds, dl_and_prep, tfrecords_dir = None, None, True, None
+        train_ds, test_ds, dl_and_prep = None, None, True
         if (
             "download_config" in download_and_prepare_kwargs
             and download_and_prepare_kwargs["download_config"].manual_dir
