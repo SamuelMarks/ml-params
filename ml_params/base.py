@@ -157,13 +157,14 @@ class BaseTrainer(ABC):
             :rtype: ```Any```
             """
             if not callable(model) or isinstance(model, str):
-                call = False
+                get_model.call = False
             self.model = (
                 model
-                if len(model_kwargs) == 0 or call is False
+                if len(model_kwargs) == 0 or get_model.call is False
                 else model(**model_kwargs)
             )
             return self.model
+        get_model.call = call
 
         self.get_model = get_model
         return self.get_model
