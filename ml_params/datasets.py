@@ -3,7 +3,7 @@ Implementation of some common datasets, expected to be called from projects whic
 """
 
 from functools import partial
-from os import path, environ
+from os import environ, path
 
 try:
     from ml_prepare.datasets import datasets2classes
@@ -16,7 +16,9 @@ from ml_params.utils import common_dataset_handler
 
 def load_data_from_ml_prepare(
     dataset_name,
-    tfds_dir=environ.get("TFDS_DATA_DIR", path.join(path.expanduser("~"), "tensorflow_datasets")),
+    tfds_dir=environ.get(
+        "TFDS_DATA_DIR", path.join(path.expanduser("~"), "tensorflow_datasets")
+    ),
     generate_dir=None,
     retrieve_dir=None,
     K=None,
@@ -88,7 +90,9 @@ def load_data_from_ml_prepare(
 
 def load_data_from_tfds_or_ml_prepare(
     dataset_name,
-    tfds_dir=environ.get("TFDS_DATA_DIR", path.join(path.expanduser("~"), "tensorflow_datasets")),
+    tfds_dir=environ.get(
+        "TFDS_DATA_DIR", path.join(path.expanduser("~"), "tensorflow_datasets")
+    ),
     K=None,
     as_numpy=False,
     **data_loader_kwargs

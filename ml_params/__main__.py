@@ -295,6 +295,12 @@ def main(argv=None):
     # Make required CLI arguments optional iff they are required but have a default value.
 
     def remove_required(the_parser):
+        """
+        Takeaway `required=True` from CLI options whic have a default value set
+
+        :param the_parser: The argument parser object
+        :type the_parser: ```ArgumentParser```
+        """
         def _remove_required(sub_parser_action_idx, argument_parser_name, action_idx):
             """
             Set the required parameter to False
