@@ -32,7 +32,7 @@ losses = Literal['BinaryCrossentropy', 'CategoricalCrossentropy', 'CategoricalHi
 
 ## Developer guide
 
-The [doctrans](https://github.com/SamuelMarks/doctrans) project was developed to make ml-params—and its implementations—possible… without a ridiculous amount of hand-written duplication. The duplication is still present, but doctrans will automatically keep them in sync, multi-directionally. So you can edit any of these and it'll translate the changes until every 'interface' is equivalent:
+The [doctrans](https://github.com/SamuelMarks/doctrans) project was developed to make ml-params—and its implementations—possible… without a ridiculous amount of hand-written duplication. The duplication is still present, but doctrans will automatically keep them in sync, multi-directionally. So you can edit any of these, and it'll translate the changes until every 'interface' is equivalent:
 
   - CLI
   - Class

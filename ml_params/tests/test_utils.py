@@ -35,7 +35,13 @@ class TestUtils(TestCase):
                     to_d(ml_params.utils).keys(),
                     (
                         ml_params.utils.__all__
-                        + ["getmembers", "parse_to_argv_gen", "path", "version_info"]
+                        + [
+                            "environ",
+                            "getmembers",
+                            "parse_to_argv_gen",
+                            "path",
+                            "version_info",
+                        ]
                     ),
                 ),
             )

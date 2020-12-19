@@ -114,7 +114,7 @@ def load_data_from_tfds_or_ml_prepare(
     :return: Train and tests dataset splits
     :rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
     """
-    from ml_prepare.exectors import build_tfds_dataset
+    from ml_prepare.executors import build_tfds_dataset
 
     ds_builder = (
         partial(build_tfds_dataset, tfds_dir=tfds_dir)

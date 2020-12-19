@@ -2,7 +2,7 @@
 Collection of utility functions
 """
 from inspect import getmembers
-from os import path, environ
+from os import environ, path
 from sys import version_info
 
 
@@ -73,7 +73,10 @@ def common_dataset_handler(
                 info = ds_builder.info
                 ds_builder = tfds.builder(
                     ds_builder.name,
-                    data_dir=environ.get("TFDS_DATA_DIR", path.dirname(path.dirname(ds_builder._data_dir))),
+                    data_dir=environ.get(
+                        "TFDS_DATA_DIR",
+                        path.dirname(path.dirname(ds_builder._data_dir)),
+                    ),
                 )
                 as_dataset_kwargs.update({"as_supervised": True, "batch_size": 1})
         if dl_and_prep:

@@ -17,7 +17,7 @@ class TestBaseTrainer(TestCase):
     """
 
     # @skip("No clue how to write this test")
-    # def test_no_custom_modules(self):
+    # def test_no_custom_modules(self) -> None:
     #     """
     #     Tests when modules are missing
     #     """
