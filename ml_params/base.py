@@ -164,6 +164,7 @@ class BaseTrainer(ABC):
                 else model(**model_kwargs)
             )
             return self.model
+
         get_model.call = call
 
         self.get_model = get_model

@@ -15,7 +15,7 @@ from pkg_resources import working_set
 
 from ml_params import __version__
 from ml_params.base import BaseTrainer
-from ml_params.utils import parse_to_argv
+from ml_params.utils import parse_to_argv, pop_at_index
 
 if sys.version[0] == "3":
     string_types = (str,)
@@ -272,6 +272,7 @@ def main(argv=None):
     )
 
     trainer = Trainer()  # type: BaseTrainer
+    replace_args = []
 
     # Add CLI parsers from dynamically imported library
     subparsers = _parser.add_subparsers(
@@ -395,26 +396,29 @@ def main(argv=None):
             #     __args = yaml.safe_load(arguments)
             #     return init(**__args)
             # else:
-            __parser = ArgumentParser(
+            param_param_parser = ArgumentParser(
                 prog="--{dest}".format(dest=dest),
                 description="Generated parser for a single parameter",
             )
-            __sub = __parser.add_subparsers(
+            sub_param_param_parser = param_param_parser.add_subparsers(
                 help="Subcommand for internal compatibility with helper functions"
             )
-            ___actual_parser = __sub.add_parser(
+            ___actual_parser = sub_param_param_parser.add_parser(
                 name,
                 prog="{parent_prog} '{name}:".format(
-                    parent_prog=__parser.prog, name=name
+                    parent_prog=param_param_parser.prog, name=name
                 ),
-                help="The actual parser",
+                help="The actual parser for parsing param params",
             )
             init(___actual_parser)
-            remove_required(__parser)
-            sub_namespace = __parser.parse_args([name] + parse_to_argv(arguments))
-            del __parser, __sub, ___actual_parser
+            remove_required(param_param_parser)
+            sub_namespace = param_param_parser.parse_args(
+                [name] + parse_to_argv(arguments)
+            )
+            del param_param_parser, sub_param_param_parser, ___actual_parser
             sub_namespace.__class__.__name__ = name
-            return sub_namespace
+            replace_args.append((".".join((dest, name)), sub_namespace))
+            return name
         return type_name
 
     # When the symbol_table contains the target (dest) CLI parameter,
@@ -458,17 +462,29 @@ def main(argv=None):
     # Parse the CLI input continuously—i.e., for each subcommand—until completion. `trainer` holds/updates state.
     rest = argv
     _parser.symbol_table = symbol_table
+
     while len(rest) != 0:
         args, rest = _parser.parse_known_args(rest)
 
         getattr(trainer, args.command)(
             **{
-                k: v
-                for k, v in vars(args).items()
-                if isinstance(v, dict)
-                or v is not None
-                and v != "None"
-                and k != "command"
+                arg_name: tuple(
+                    map(
+                        lambda val: pop_at_index(
+                            replace_args,
+                            ".".join(
+                                (arg_name, val if isinstance(val, str) else val[0])
+                            ),
+                            val,
+                            process_key=itemgetter(0),
+                        ),
+                        arg_val,
+                    )
+                )
+                if isinstance(arg_val, list)
+                else arg_val
+                for arg_name, arg_val in vars(args).items()
+                if arg_val is not None and arg_val != "None" and arg_name != "command"
             }
         )
 

@@ -2,6 +2,7 @@
 Collection of utility functions
 """
 from inspect import getmembers
+from operator import itemgetter
 from os import environ, path
 from sys import version_info
 
@@ -258,4 +259,83 @@ def parse_to_argv(s):
     return list(parse_to_argv_gen(s))
 
 
-__all__ = ["camel_case", "common_dataset_handler", "parse_to_argv", "to_d", "to_numpy"]
+def pop_at_index(
+    l, key, default=None, process_key=lambda k: k, process_val=lambda v: v
+):
+    """
+    If key in index, remove it from list, and return it
+
+    :param l: Input list
+    :type l: ```list```
+
+    :param key: Lookup key
+    :type key: ```str```
+
+    :param default: The default value if key not in l
+    :type default: ```Optional[Any]```
+
+    :param process_key: Postprocess the key
+    :type process_key: ```Callable[[Any], Any]```
+
+    :param process_val: Postprocess the val
+    :type process_val: ```Callable[[Any], Any]```
+
+    :return: default if not in list, else the value from the list (and list is now minus that elem)
+    :rtype: ```Optional[Any]```
+    """
+    # if process_key is not None and not isinstance(key, tuple):
+    #    return default
+    try:
+        if process_key:
+            idx = next(
+                map(
+                    itemgetter(0),
+                    filter(
+                        None,
+                        filter(
+                            lambda idx_e: process_key(idx_e[1]) == key,
+                            enumerate(l),
+                        ),
+                    ),
+                )
+            )
+        else:
+            idx = l.index(key)
+    except (ValueError, StopIteration):
+        if isinstance(default, (list, tuple)) and len(default) == 1:
+            return default[0]
+        return default
+    else:
+        from copy import deepcopy
+
+        return deepcopy(process_val(l.pop(idx)))
+
+
+def set_attr(object, attribute, value):
+    """
+    Sets the named attribute on the given object to the specified value. Then returns it.
+
+    setattr(x, 'y', v) is equivalent to ``x.y = v''
+
+    :param object: The object
+    :type object: ```Any```
+
+    :param attribute: The attribute
+    :type attribute: ```str```
+
+    :param value: The value
+    :type value: ```Any```
+    """
+    setattr(object, attribute, value)
+    return object
+
+
+__all__ = [
+    "camel_case",
+    "common_dataset_handler",
+    "parse_to_argv",
+    "pop_at_index",
+    "set_attr",
+    "to_d",
+    "to_numpy",
+]
