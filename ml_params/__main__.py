@@ -481,8 +481,20 @@ def main(argv=None):
                         arg_val,
                     )
                 )
-                if isinstance(arg_val, list)
-                else arg_val
+                if isinstance(arg_val, (list, tuple))
+                else pop_at_index(
+                    replace_args,
+                    ".".join(
+                        (
+                            arg_name,
+                            arg_val
+                            if isinstance(arg_val, str)
+                            else "```{}```".format(arg_val),
+                        )
+                    ),
+                    arg_val,
+                    process_key=itemgetter(0),
+                )
                 for arg_name, arg_val in vars(args).items()
                 if arg_val is not None and arg_val != "None" and arg_name != "command"
             }

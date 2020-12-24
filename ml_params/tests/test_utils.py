@@ -41,6 +41,7 @@ class TestUtils(TestCase):
                             "parse_to_argv_gen",
                             "path",
                             "version_info",
+                            "itemgetter",
                         ]
                     ),
                 ),
