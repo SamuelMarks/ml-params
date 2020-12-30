@@ -7,7 +7,7 @@ from itertools import chain
 from sys import stdout
 from typing import Any, List, Optional, Tuple, Union
 
-from ml_params.datasets import load_data_from_tfds_or_ml_prepare
+from ml_params.datasets import load_data_from_tfds_or_ml_prepare___ml_params
 from ml_params.utils import to_d, to_numpy
 
 try:
@@ -49,7 +49,7 @@ class BaseTrainer(ABC):
         self,
         *,
         dataset_name: str,
-        data_loader=load_data_from_tfds_or_ml_prepare,
+        data_loader=load_data_from_tfds_or_ml_prepare___ml_params,
         data_type="infer",
         output_type=None,
         K=None,

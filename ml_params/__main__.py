@@ -462,6 +462,14 @@ def main(argv=None):
     # Parse the CLI input continuously—i.e., for each subcommand—until completion. `trainer` holds/updates state.
     rest = argv
     _parser.symbol_table = symbol_table
+    if (
+        len(argv) == 2
+        and argv[0] == "--engine"
+        or len(argv) == 1
+        and argv[0].startswith("--engine")
+    ):
+        _parser.print_help(file=sys.stderr)
+        _parser.error("--engine has been provided, but nothing else!")
 
     while len(rest) != 0:
         args, rest = _parser.parse_known_args(rest)

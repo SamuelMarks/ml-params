@@ -88,13 +88,14 @@ def load_data_from_ml_prepare(
     )
 
 
-def load_data_from_tfds_or_ml_prepare(
+def load_data_from_tfds_or_ml_prepare___ml_params(
     dataset_name,
     tfds_dir=environ.get(
         "TFDS_DATA_DIR", path.join(path.expanduser("~"), "tensorflow_datasets")
     ),
     K=None,
     as_numpy=False,
+    acquire_and_concat_validation_to_train=True,
     **data_loader_kwargs
 ):
     """
@@ -112,12 +113,16 @@ def load_data_from_tfds_or_ml_prepare(
     :param as_numpy: Convert to numpy ndarrays
     :type as_numpy: ```bool```
 
+    :param acquire_and_concat_validation_to_train: Whether to acquire the validation split
+      and then concatenate it to train
+
     :param data_loader_kwargs: pass this as arguments to data_loader function
     :type data_loader_kwargs: ```**data_loader_kwargs```
 
     :return: Train and tests dataset splits
     :rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
     """
+
     from ml_prepare.executors import build_tfds_dataset
 
     ds_builder = (
@@ -144,5 +149,6 @@ def load_data_from_tfds_or_ml_prepare(
         scale=None,
         K=K,
         as_numpy=as_numpy,
+        acquire_and_concat_validation_to_train=acquire_and_concat_validation_to_train,
         **download_and_prepare_kwargs
     )

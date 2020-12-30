@@ -1,6 +1,7 @@
 """
 Collection of utility functions
 """
+from functools import partial
 from inspect import getmembers
 from operator import itemgetter
 from os import environ, path
@@ -25,7 +26,12 @@ def camel_case(st, upper=False):
 
 
 def common_dataset_handler(
-    ds_builder, scale, K, as_numpy, **download_and_prepare_kwargs
+    ds_builder,
+    scale,
+    K,
+    as_numpy,
+    acquire_and_concat_validation_to_train=True,
+    **download_and_prepare_kwargs
 ):
     """
     Helper function that is to be used by the different dataset builders
@@ -42,6 +48,9 @@ def common_dataset_handler(
 
     :param as_numpy: Convert to numpy ndarrays
     :type as_numpy: ```bool```
+
+    :param acquire_and_concat_validation_to_train: Whether to acquire the validation split
+      and then concatenate it to train
 
     :param download_and_prepare_kwargs:
     :type download_and_prepare_kwargs: ```**download_and_prepare_kwargs```
@@ -85,6 +94,17 @@ def common_dataset_handler(
 
         if train_ds is None:
             train_ds = ds_builder.as_dataset(split="train", **as_dataset_kwargs)
+            valid_ds_key = next(
+                filter(partial(str.startswith, "valid"), ds_builder.info.splits), None
+            )
+            if valid_ds_key and acquire_and_concat_validation_to_train:
+                print("train was", train_ds.cardinality())
+                valid_ds = ds_builder.as_dataset(
+                    split=valid_ds_key, **as_dataset_kwargs
+                )
+                print("validation is", valid_ds.cardinality())
+                train_ds = train_ds.concatenate(valid_ds)
+                print("train now", train_ds.cardinality())
         if test_ds is None:
             test_ds = ds_builder.as_dataset(split="test", **as_dataset_kwargs)
     elif hasattr(ds_builder, "train_stream") and hasattr(ds_builder, "eval_stream"):
