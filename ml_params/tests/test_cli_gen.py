@@ -56,10 +56,16 @@ class TestMain(TestCase):
 
         help_text, _usage, engine_help_text = err.getvalue().rpartition("usage")
         engine_help_text = _usage + engine_help_text
-        engines = "{tensorflow}" if TF_SUPPORTED else "{}"
+        engines = help_text[
+            (lambda k: help_text.index(k) + len(k) + 2)("--engine") : help_text.index(
+                "\n"
+            )
+            - 2
+        ]
+        print("engines: {!r} ;".format(engines))
         self.assertEqual(
             engine_help_text,
-            "usage: python -m ml_params [-h] [--version] [--engine {engines}]\n"
+            "usage: python -m ml_params [-h] [--version] [--engine {{{engines}}}]\n"
             "python -m ml_params: error: --engine must be provided,"
             " and from installed ml-params-* options\n".format(engines=engines),
         )
@@ -69,12 +75,12 @@ class TestMain(TestCase):
                 (
                     (
                         help_text,
-                        "usage: python -m ml_params [-h] [--version] [--engine {engines}]\n\n"
+                        "usage: python -m ml_params [-h] [--version] [--engine {{{engines}}}]\n\n"
                         "Consistent CLI for every popular ML framework.\n\n"
                         "optional arguments:\n"
                         "  -h, --help            show this help message and exit\n"
                         "  --version             show program's version number and exit\n"
-                        "  --engine {engines}"
+                        "  --engine {{{engines}}}"
                         '                        ML engine, e.g., "TensorFlow", "JAX", "pytorch"\n'.format(
                             engines=engines
                         ),
@@ -112,17 +118,22 @@ class TestMain(TestCase):
             "Adding CLI parser: load_data_parser ;\n"
             "Adding CLI parser: load_model_parser ;\n"
             "Adding CLI parser: train_parser ;\n"
-            "usage: python -m ml_params [-h] [--version] [--engine {tensorflow}]\n"
-            "                           {load_data,load_model,train} ...\n\n"
-            "Consistent CLI for every popular ML framework.\n\n"
-            "positional arguments:\n"
-            "  {load_data,load_model,train}\n"
-            "                        subcommand to run. Hacked to be chainable.\n\n"
-            "optional arguments:\n"
-            "  -h, --help            show this help message and exit\n"
-            "  --version             show program's version number and exit\n"
-            "  --engine {tensorflow}\n"
-            '                        ML engine, e.g., "TensorFlow", "JAX", "pytorch"\n',
+            "usage: python -m ml_params [-h] [--version] [--engine {{{engines}}}]"
+            "\n{rest}".format(
+                engines=engines,
+                rest="                           {load_data,load_model,train} ...\n\n"
+                "Consistent CLI for every popular ML framework.\n\n"
+                "positional arguments:\n"
+                "  {load_data,load_model,train}\n"
+                "                        subcommand to run. Hacked to be chainable.\n\n"
+                "optional arguments:\n"
+                "  -h, --help            show this help message and exit\n"
+                "  --version             show program's version number and exit\n"
+                "  " + "--engine {{{engines}}}\n"
+                '                        ML engine, e.g., "TensorFlow", "JAX", "pytorch"\n'.format(
+                    engines=engines
+                ),
+            ),
         )
 
         del environ["ML_PARAMS_ENGINE"]

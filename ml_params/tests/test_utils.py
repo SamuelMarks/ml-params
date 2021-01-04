@@ -39,6 +39,7 @@ class TestUtils(TestCase):
                             "environ",
                             "getmembers",
                             "parse_to_argv_gen",
+                            "partial",
                             "path",
                             "version_info",
                             "itemgetter",
