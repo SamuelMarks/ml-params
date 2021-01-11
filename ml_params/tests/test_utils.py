@@ -36,6 +36,7 @@ class TestUtils(TestCase):
                     (
                         ml_params.utils.__all__
                         + [
+                            "deepcopy",
                             "environ",
                             "getmembers",
                             "parse_to_argv_gen",
