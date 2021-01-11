@@ -15,6 +15,7 @@ from pkg_resources import working_set
 
 from ml_params import __version__
 from ml_params.base import BaseTrainer
+from ml_params.tests.utils_for_tests import rpartial
 from ml_params.utils import parse_to_argv, pop_at_index
 
 if sys.version[0] == "3":
@@ -55,10 +56,29 @@ def parse_from_symbol_table(value, dest, symbol_table):
     :rtype: ```Tuple[Optional[str], Optional[Any], Optional[str]]
     """
     if dest in symbol_table and isinstance(value, str):
-        name, _, raw = value.partition(":")
-        config_name = name_tpl.format(name=name)
-        if _ and raw and config_name in symbol_table[dest].__all__:
-            return name, getattr(symbol_table[dest], config_name), raw
+        symbol_name, _, symbol_args = value.partition(":")
+        config_name = name_tpl.format(name=symbol_name)
+        if symbol_args:
+            if _ and config_name in symbol_table[dest].__all__:
+                return (
+                    symbol_name,
+                    getattr(symbol_table[dest], config_name),
+                    symbol_args,
+                )
+            else:
+                infer_symbol_name = next(
+                    filter(
+                        rpartial(str.startswith, symbol_name),
+                        symbol_table[dest].__all__,
+                    ),
+                    None,
+                )
+                if infer_symbol_name is not None:
+                    return (
+                        symbol_name,
+                        getattr(symbol_table[dest], infer_symbol_name),
+                        symbol_args,
+                    )
 
     return None, None, None
 

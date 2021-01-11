@@ -62,7 +62,6 @@ class TestMain(TestCase):
             )
             - 2
         ]
-        print("engines: {!r} ;".format(engines))
         self.assertEqual(
             engine_help_text,
             "usage: python -m ml_params [-h] [--version] [--engine {{{engines}}}]\n"
@@ -155,7 +154,7 @@ class TestMain(TestCase):
                             "--callbacks",
                             'TensorBoard: "--log_dir={!r}"'.format(log_dir),
                             "--loss",
-                            "BinaryCrossentropy",
+                            "binary_crossentropy",
                             "--optimizer",
                             "Adam",
                             "--epochs",
@@ -166,14 +165,14 @@ class TestMain(TestCase):
             )
 
         with patch("ml_params.__main__.environ", {"ML_PARAMS_ENGINE": "tensorflow"}):
-        #, patch("sys.stdout", new_callable=StringIO) as out, patch(
-        #   "sys.stderr", new_callable=StringIO
-        #) as err:
+            # , patch("sys.stdout", new_callable=StringIO) as out, patch(
+            #   "sys.stderr", new_callable=StringIO
+            # ) as err:
             self.assertIsNone(main(_argv))
 
-        #print(err.getvalue(), file=sys.stderr)
-        #out_str = out.getvalue()
-        #self.assertIn("Epoch 3/3", out_str)
+        # print(err.getvalue(), file=sys.stderr)
+        # out_str = out.getvalue()
+        # self.assertIn("Epoch 3/3", out_str)
         # c = Counter(out_str.split(" "))
         # for word in "val_loss", "CLI", "parser": self.assertEqual(c[word], 3)
 

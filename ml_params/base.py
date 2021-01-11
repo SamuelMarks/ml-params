@@ -193,7 +193,7 @@ class BaseTrainer(ABC):
         :type epochs: ```int```
         """
         # :raises AssertionError: Whence `epochs is None or < 1`
-        assert epochs is not None and epochs > 0
+        assert isinstance(epochs, int) and epochs > 0
 
 
 del ABC, abstractmethod, stdout, List
