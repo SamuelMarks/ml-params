@@ -87,7 +87,7 @@ class BaseTrainer(ABC):
         if data_type != "infer":
             raise NotImplementedError(data_type)
         elif data_loader is None:
-            data_loader = load_data_from_tfds_or_ml_prepare
+            data_loader = load_data_from_tfds_or_ml_prepare___ml_params
 
         data_loader_kwargs.update(
             {

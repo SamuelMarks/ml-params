@@ -1,6 +1,7 @@
 """
 Collection of utility functions
 """
+from copy import deepcopy
 from functools import partial
 from inspect import getmembers
 from operator import itemgetter
@@ -62,51 +63,13 @@ def common_dataset_handler(
     if hasattr(ds_builder, "download_and_prepare") and hasattr(
         ds_builder, "as_dataset"
     ):
-        train_ds, test_ds, dl_and_prep = None, None, True
-        if (
-            "download_config" in download_and_prepare_kwargs
-            and download_and_prepare_kwargs["download_config"].manual_dir
-        ):
-            dl_and_prep = not path.isdir(ds_builder._data_dir)
-            if dl_and_prep:
-                name_slash = "{}{}{}".format(path.sep, ds_builder.name, path.sep)
-                other_data_dir = ds_builder._data_dir.replace(
-                    name_slash, "{}downloads{}".format(path.sep, name_slash)
-                )
-                dl_and_prep = not path.isdir(other_data_dir)
-                if not dl_and_prep:
-                    ds_builder._data_dir = other_data_dir
-
-            if not dl_and_prep:
-                import tensorflow_datasets.public_api as tfds
-
-                info = ds_builder.info
-                ds_builder = tfds.builder(
-                    ds_builder.name,
-                    data_dir=environ.get(
-                        "TFDS_DATA_DIR",
-                        path.dirname(path.dirname(ds_builder._data_dir)),
-                    ),
-                )
-                as_dataset_kwargs.update({"as_supervised": True, "batch_size": 1})
-        if dl_and_prep:
-            ds_builder.download_and_prepare(**download_and_prepare_kwargs)
-
-        if train_ds is None:
-            train_ds = ds_builder.as_dataset(split="train", **as_dataset_kwargs)
-            valid_ds_key = next(
-                filter(partial(str.startswith, "valid"), ds_builder.info.splits), None
-            )
-            if valid_ds_key and acquire_and_concat_validation_to_train:
-                print("train was", train_ds.cardinality())
-                valid_ds = ds_builder.as_dataset(
-                    split=valid_ds_key, **as_dataset_kwargs
-                )
-                print("validation is", valid_ds.cardinality())
-                train_ds = train_ds.concatenate(valid_ds)
-                print("train now", train_ds.cardinality())
-        if test_ds is None:
-            test_ds = ds_builder.as_dataset(split="test", **as_dataset_kwargs)
+        info, test_ds, train_ds = _handle_tfds(
+            acquire_and_concat_validation_to_train,
+            as_dataset_kwargs,
+            download_and_prepare_kwargs,
+            ds_builder,
+            info,
+        )
     elif hasattr(ds_builder, "train_stream") and hasattr(ds_builder, "eval_stream"):
         return ds_builder  # Handled elsewhere, this is from trax
     else:
@@ -123,6 +86,80 @@ def common_dataset_handler(
         test_ds["image"] = K.float32(test_ds["image"]) / scale
 
     return train_ds, test_ds, info or train_ds._info
+
+
+def _handle_tfds(
+    acquire_and_concat_validation_to_train,
+    as_dataset_kwargs,
+    download_and_prepare_kwargs,
+    ds_builder,
+    info,
+):
+    """
+    Helper function that is to be used by the different dataset builders
+
+    :param acquire_and_concat_validation_to_train: Whether to acquire the validation split
+      and then concatenate it to train
+    :type acquire_and_concat_validation_to_train: ```bool```
+
+    :param as_dataset_kwargs:
+    :type as_dataset_kwargs: ```**as_dataset_kwargs```
+
+    :param download_and_prepare_kwargs:
+    :type download_and_prepare_kwargs: ```**download_and_prepare_kwargs```
+
+    :param ds_builder: dataset builder
+    :type ds_builder: ```tfds.core.DatasetBuilder```
+
+    :param info: Dataset info
+    :type info: ```tfds.core.DatasetInfo```
+
+    :return: Train and tests dataset splits
+    :rtype: ```Union[Tuple[tf.data.Dataset,tf.data.Dataset,tfds.core.DatasetInfo], Tuple[np.ndarray,np.ndarray,Any]]```
+    """
+    train_ds, test_ds, dl_and_prep = None, None, True
+    if (
+        "download_config" in download_and_prepare_kwargs
+        and download_and_prepare_kwargs["download_config"].manual_dir
+    ):
+        dl_and_prep = not path.isdir(ds_builder._data_dir)
+        if dl_and_prep:
+            name_slash = "{}{}{}".format(path.sep, ds_builder.name, path.sep)
+            other_data_dir = ds_builder._data_dir.replace(
+                name_slash, "{}downloads{}".format(path.sep, name_slash)
+            )
+            dl_and_prep = not path.isdir(other_data_dir)
+            if not dl_and_prep:
+                ds_builder._data_dir = other_data_dir
+
+        if not dl_and_prep:
+            import tensorflow_datasets.public_api as tfds
+
+            info = ds_builder.info
+            ds_builder = tfds.builder(
+                ds_builder.name,
+                data_dir=environ.get(
+                    "TFDS_DATA_DIR",
+                    path.dirname(path.dirname(ds_builder._data_dir)),
+                ),
+            )
+            as_dataset_kwargs.update({"as_supervised": True, "batch_size": 1})
+    if dl_and_prep:
+        ds_builder.download_and_prepare(**download_and_prepare_kwargs)
+    if train_ds is None:
+        train_ds = ds_builder.as_dataset(split="train", **as_dataset_kwargs)
+        valid_ds_key = next(
+            filter(partial(str.startswith, "valid"), ds_builder.info.splits), None
+        )
+        if valid_ds_key and acquire_and_concat_validation_to_train:
+            print("train was", train_ds.cardinality())
+            valid_ds = ds_builder.as_dataset(split=valid_ds_key, **as_dataset_kwargs)
+            print("validation is", valid_ds.cardinality())
+            train_ds = train_ds.concatenate(valid_ds)
+            print("train now", train_ds.cardinality())
+    if test_ds is None:
+        test_ds = ds_builder.as_dataset(split="test", **as_dataset_kwargs)
+    return info, test_ds, train_ds
 
 
 def to_numpy(obj, K=None, device=None):
@@ -280,13 +317,13 @@ def parse_to_argv(s):
 
 
 def pop_at_index(
-    l, key, default=None, process_key=lambda k: k, process_val=lambda v: v
+    input_list, key, default=None, process_key=lambda k: k, process_val=lambda v: v
 ):
     """
     If key in index, remove it from list, and return it
 
-    :param l: Input list
-    :type l: ```list```
+    :param input_list: Input list
+    :type input_list: ```list```
 
     :param key: Lookup key
     :type key: ```str```
@@ -314,21 +351,19 @@ def pop_at_index(
                         None,
                         filter(
                             lambda idx_e: process_key(idx_e[1]) == key,
-                            enumerate(l),
+                            enumerate(input_list),
                         ),
                     ),
                 )
             )
         else:
-            idx = l.index(key)
+            idx = input_list.index(key)
     except (ValueError, StopIteration):
         if isinstance(default, (list, tuple)) and len(default) == 1:
             return default[0]
         return default
     else:
-        from copy import deepcopy
-
-        return deepcopy(process_val(l.pop(idx)))
+        return deepcopy(process_val(input_list.pop(idx)))
 
 
 def set_attr(object, attribute, value):
