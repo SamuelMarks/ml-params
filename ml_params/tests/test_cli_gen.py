@@ -76,12 +76,15 @@ class TestMain(TestCase):
                         help_text,
                         "usage: python -m ml_params [-h] [--version] [--engine {{{engines}}}]\n\n"
                         "Consistent CLI for every popular ML framework.\n\n"
-                        "optional arguments:\n"
+                        "{option_help}:\n"
                         "  -h, --help            show this help message and exit\n"
                         "  --version             show program's version number and exit\n"
                         "  --engine {{{engines}}}"
                         '                        ML engine, e.g., "TensorFlow", "JAX", "pytorch"\n'.format(
-                            engines=engines
+                            option_help="options"
+                            if sys.version_info[:2] > (3, 9)
+                            else "optional arguments",
+                            engines=engines,
                         ),
                     )
                 ),
