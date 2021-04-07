@@ -33,11 +33,12 @@ losses = Literal['BinaryCrossentropy', 'CategoricalCrossentropy', 'CategoricalHi
 
 ## Developer guide
 
-The [doctrans](https://github.com/SamuelMarks/doctrans) project was developed to make ml-params—and its implementations—possible… without a ridiculous amount of hand-written duplication. The duplication is still present, but doctrans will automatically keep them in sync, multi-directionally. So you can edit any of these, and it'll translate the changes until every 'interface' is equivalent:
+The [cdd](https://github.com/offscale/cdd-python) project was developed to make ml-params—and its implementations—possible… without a ridiculous amount of hand-written duplication. The duplication is still present, but cdd will automatically keep them in sync, multi-directionally. So you can edit any of these, and it'll translate the changes until every 'interface' is equivalent:
 
-  - CLI
+  - CLI (and GUI from this)
   - Class
   - Function/method
+  - SQL model (SQLalchemy)
 
 It will also expand a specific property, like your `get_losses` function could generate the aforementioned `Literal`.
 
@@ -291,7 +292,7 @@ Now let's run multiple commands, which behind the scenes constructs a `Trainer` 
   - [ml-prepare](https://github.com/SamuelMarks/ml-prepare)
 
 ## Python 2.7
-Python 2.7 support isn't difficult. Just remove the keyword-only arguments. For the type annotations, use `doctrans` to automatically replace them with docstrings. Effort has been put into making everything else Python 2/3 compatible.
+Python 2.7 support isn't difficult. Just remove the keyword-only arguments. For the type annotations, use `cdd` to automatically replace them with docstrings. Effort has been put into making everything else Python 2/3 compatible.
 
 ---
 
