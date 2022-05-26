@@ -305,11 +305,48 @@ The big drawbacks with all these solutions are that they treat:
   - categorical parameters as a blackbox (no dropdown menu to select "Optimizer", "Loss function", "Transfer learning model");
   - continuous parameters as arbitrary (arbitrary floating point and integer precision).
 
-With the [cdd-python](https://github.com/offscale/cdd-python) implemented ml-params these drawbacks don't apply, enabling [future work](#Future%20work).
+With the [cdd-python](https://github.com/offscale/cdd-python) implemented ml-params these drawbacks don't apply, enabling [future work](#future-work).
 
 Technically with this library-directed implementation contributions to these 'similar' projects could be made, overcoming their inherent drawbacks.
 
 ## Future work
+
+Construct a *search space* database—in memory or disk persisted—that can be iterated through via various *strategies*.
+
+*Search space* refers to the:
+  - `Dataset`s
+  - `Model`s
+  - `Model` internals
+    - Categorical parameters
+      - `Loss` functions
+      - `Optimizer`s
+      - …
+    - Continuous [hyper]parameters, provided to model-internals and/or directly to `Model`s:
+      - Learning-rate
+      - gamma, alpha, epsilon, &etc.
+  - `Metric`s
+    - Accuracy
+    - F1 score
+    - AUCROC
+    - …
+
+_Strategies_ for exploring this search space:
+  - Greedy (grid-search)
+  - Genetic algorithms
+  - SVM
+  - Bayesian
+  - Raytuning (multi);
+  - Use ml-params as input to explore the different strategies (self-optimizing self-optimizer!)
+
+Additionally, concurrency controls to enable rapid explanation of the search space, akin to [Apache Hop](https://hop.apache.org) and [Apache Beam](https://beam.apache.org):
+  - Single machine
+    - Different hardware (GPU0 not GPU1)
+    - Different experiment per thread and/or per process
+    - Memory sharing, IPC, & other techniques
+  - Multi-machine
+    - RPC and/or pubsub system linked to database to acquire params and update progress
+
+Likely these last use-cases will be better facilitated through major contributed to Google's TensorBoard with full db support.
 
 ## Python 2.7
 Python 2.7 support isn't difficult. Just remove the keyword-only arguments. For the type annotations, use `cdd` to automatically replace them with docstrings. Effort has been put into making everything else Python 2/3 compatible.
