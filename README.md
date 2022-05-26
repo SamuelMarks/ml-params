@@ -1,6 +1,6 @@
 ml_params
 =========
-![Python version range](https://img.shields.io/badge/python-3.5%20|%203.6%20|%203.7%20|%203.8%20|%203.9%20|%203.10a4-blue.svg)
+![Python version range](https://img.shields.io/badge/python-3.5%20|%203.6%20|%203.7%20|%203.8%20|%203.9%20|%203.10%20|%203.11.0b1-blue.svg)
 ![Python implementation](https://img.shields.io/badge/implementation-cpython-blue.svg)
 [![License](https://img.shields.io/badge/license-Apache--2.0%20OR%20MIT-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Linting, testing, and coverage](https://github.com/SamuelMarks/ml-params/workflows/Linting,%20testing,%20and%20coverage/badge.svg)](https://github.com/SamuelMarks/ml-params/actions)
@@ -291,6 +291,26 @@ Now let's run multiple commands, which behind the scenes constructs a `Trainer` 
 
   - [ml-prepare](https://github.com/SamuelMarks/ml-prepare)
 
+## Similar open-source projects
+
+  - Exposing model layers as command-line arguments: [Calamari-OCR](https://github.com/Calamari-OCR/calamari/blob/445d990/docs/source/doc.command-line-usage.rst#advanced)
+  - Dynamic parameter exposure and entry: https://github.com/google/gin-config
+  - An open source inference server for your machine learning models: https://github.com/SeldonIO/mlserver
+  - Abstracted interface to multiple frameworks—without any type or even internal exposure—and related tooling: https://github.com/mlflow/mlflow
+  - Similar to MLflow: https://github.com/VertaAI/modeldb
+  - Project oriented (again, lacking type exposure): https://github.com/logicalclocks/hopsworks
+
+The big drawbacks with all these solutions are that they treat:
+
+  - categorical parameters as a blackbox (no dropdown menu to select "Optimizer", "Loss function", "Transfer learning model");
+  - continuous parameters as arbitrary (arbitrary floating point and integer precision).
+
+With the [cdd-python](https://github.com/offscale/cdd-python) implemented ml-params these drawbacks don't apply, enabling [future work](#Future%20work).
+
+Technically with this library-directed implementation contributions to these 'similar' projects could be made, overcoming their inherent drawbacks.
+
+## Future work
+
 ## Python 2.7
 Python 2.7 support isn't difficult. Just remove the keyword-only arguments. For the type annotations, use `cdd` to automatically replace them with docstrings. Effort has been put into making everything else Python 2/3 compatible.
 
@@ -310,3 +330,4 @@ at your option.
 Unless you explicitly state otherwise, any contribution intentionally submitted
 for inclusion in the work by you, as defined in the Apache-2.0 license, shall be
 dual licensed as above, without any additional terms or conditions.
+
