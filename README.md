@@ -18,8 +18,8 @@ The approach is type-focussed, with explicit static code-generation of `Literal`
 
   - Transfer learning models
   - Optimizers
-  - Losses
-  - &etc., including non-NN related scikit.learn, XGBoost
+  - Loss functions
+  - &etc., including non-NN related [scikit.learn](https://scikit-learn.org), [XGBoost](https://xgboost.ai)
 
 For example, the following would be exposed, and thereby become useful from Python, in GUIs, REST/RPC APIs, and CLIs:
 ```python
@@ -335,7 +335,7 @@ _Strategies_ for exploring this search space:
   - Genetic algorithms
   - SVM
   - Bayesian
-  - Raytuning (multi);
+  - Raytuning ([multi](https://docs.ray.io/en/latest/tune/api_docs/suggestion.html));
   - Use ml-params as input to explore the different strategies (self-optimizing self-optimizer!)
 
 Additionally, concurrency controls to enable rapid explanation of the search space, akin to [Apache Hop](https://hop.apache.org) and [Apache Beam](https://beam.apache.org):
@@ -346,7 +346,9 @@ Additionally, concurrency controls to enable rapid explanation of the search spa
   - Multi-machine
     - RPC and/or pubsub system linked to database to acquire params and update progress
 
-Likely these last use-cases will be better facilitated through major contributed to Google's TensorBoard with full db support.
+Likely these last use-cases will be better facilitated through contributions planned for Google's TensorBoard for full db support (from this project!).
+
+Furthermore, contributions to TensorFlow, PyTorch, and other frameworks are being prepared so that they officially expose granular types… making projects like ml-params more useful and accurate.
 
 ## Python 2.7
 Python 2.7 support isn't difficult. Just remove the keyword-only arguments. For the type annotations, use `cdd` to automatically replace them with docstrings. Effort has been put into making everything else Python 2/3 compatible.
